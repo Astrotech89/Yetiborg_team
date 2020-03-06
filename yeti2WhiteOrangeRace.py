@@ -15,6 +15,11 @@ import numpy
 
 
 
+#Globals
+global camera
+global ZB
+global processor
+global motionDetected
 
 # Setup the ZeroBorg
 ZB = ZeroBorg.ZeroBorg()
@@ -22,27 +27,27 @@ ZB = ZeroBorg.ZeroBorg()
 ZB.Init()
 #Safety stuff
 if not ZB.foundChip:
-    boards = ZeroBorg.ScanForZeroBorg()
-    if len(boards) == 0:
-        print 'No ZeroBorg found, check you are attached :)'
-    else:
-        print 'No ZeroBorg at address %02X, but we did find boards:' % (ZB.i2cAddress)
-        for board in boards:
-            print '    %02X (%d)' % (board, board)
-        print 'If you need to change the I�C address change the setup line so it is correct, e.g.'
-        print 'ZB.i2cAddress = 0x%02X' % (boards[0])
-    sys.exit()
+	boards = ZeroBorg.ScanForZeroBorg()
+	if len(boards) == 0:
+		print 'No ZeroBorg found, check you are attached :)'
+	else:
+		print 'No ZeroBorg at address %02X, but we did find boards:' % (ZB.i2cAddress)
+		for board in boards:
+			print '    %02X (%d)' % (board, board)
+		print 'If you need to change the I�C address change the setup line so it is correct, e.g.'
+		print 'ZB.i2cAddress = 0x%02X' % (boards[0])
+	sys.exit()
 #ZB.SetEpoIgnore(True)                 # Uncomment to disable EPO latch, needed if you do not have a switch / jumper
 # Ensure the communications failsafe has been enabled!
 failsafe = False
 for i in range(5):
-    ZB.SetCommsFailsafe(True)
-    failsafe = ZB.GetCommsFailsafe()
-    if failsafe:
-        break
+	ZB.SetCommsFailsafe(True)
+	failsafe = ZB.GetCommsFailsafe()
+	if failsafe:
+		break
 if not failsafe:
-    print 'Board %02X failed to report in failsafe mode!' % (ZB.i2cAddress)
-    sys.exit()
+	print 'Board %02X failed to report in failsafe mode!' % (ZB.i2cAddress)
+	sys.exit()
 ZB.ResetEpo()
 
 # Power settings
@@ -63,6 +68,18 @@ showDebug = True                        # True to display detection values
 
 # Setup the power limits
 if voltageOut > voltageIn:
-    maxPower = 1.0
+	maxPower = 1.0
 else:
-    maxPower = voltageOut / float(voltageIn)
+	maxPower = voltageOut / float(voltageIn)
+
+
+class MoveZB(threading.Thread):
+	def __init__(self):
+		super(MoveZB, self).__init__()
+		self.stream = picamera.array.PiRGBArray(camera)
+
+	def ConstantVelocity(self,driveLeft,driveRight):
+		ZB.SetMotor1(-maxPower * driveRight)
+		ZB.SetMotor2(-maxPower * driveRight)
+		ZB.SetMotor3(-maxPower * driveLeft)
+		ZB.SetMotor4(-maxPower * driveLeft)
