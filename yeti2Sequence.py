@@ -21,7 +21,7 @@ if not ZB.foundChip:
         print 'No ZeroBorg at address %02X, but we did find boards:' % (ZB.i2cAddress)
         for board in boards:
             print '    %02X (%d)' % (board, board)
-        print 'If you need to change the I²C address change the setup line so it is correct, e.g.'
+        print 'If you need to change the Iï¿½C address change the setup line so it is correct, e.g.'
         print 'ZB.i2cAddress = 0x%02X' % (boards[0])
     sys.exit()
 #ZB.SetEpoIgnore(True)                 # Uncomment to disable EPO latch, needed if you do not have a switch / jumper
@@ -50,6 +50,8 @@ def PerformMove(driveLeft, driveRight, numSeconds):
     ZB.SetMotor2(-driveRight * maxPower) # Front right
     ZB.SetMotor3(-driveLeft  * maxPower) # Front left
     ZB.SetMotor4(-driveLeft  * maxPower) # Rear left
+    print -driveRight * maxPower
+    print -driveLeft  * maxPower
     # Wait for the time
     time.sleep(numSeconds)
     # Turn the motors off

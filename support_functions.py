@@ -195,7 +195,7 @@ def auto_guide(frame, color='orange'):
     lane_lines = lane_lines_calculation(frame, lane)
     steering_angle = steering_angle_calculation(lane_lines, edges)
 
-    if steering_angle - 90 < 10:
+    if steering_angle - 90 < 8:
         steering_angle = 90
     else:
         pass
