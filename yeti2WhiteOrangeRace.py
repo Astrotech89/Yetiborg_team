@@ -87,6 +87,51 @@ class MoveYB(threading.Thread):
 		ZB.SetMotor3(-maxPower * driveLeft)
 		ZB.SetMotor4(-maxPower * driveLeft)
 
+
+
+    def Power_Change(steering_angle):
+        distance_between_opposite_wheels = 14.5 /100 #m
+        diameter_of_wheel = 6.5/100 #m
+        intergration_time = 350/1000 #sec, TBD
+
+        velocity_change = distance_between_opposite_wheels * np.abs(steering_angle) / diameter_of_wheel / intergration_time / 3
+        w = 3 * diameter_of_wheel * velocity_change / distance_between_opposite_wheels
+        dw = w * distance_between_opposite_wheels / 6
+        power_ratio = 1 - dw/26
+        return power_ratio
+
+    
+    # ---------------------steering_angle calculation------------------------
+    steering_angle = 10
+    # ---------------------steering_angle calculation------------------------
+
+
+    def Turn_YB(self, driveLeft, driveRight, steering_angle):
+        power_ratio = Power_Change(steering_angle)
+        # Turn Right
+        if steering_angle > 0:
+            ZB.SetMotor1(-maxPower * driveRight)
+            ZB.SetMotor2(-maxPower * driveRight)
+            ZB.SetMotor3(-power_ratio * maxPower * driveLeft)
+            ZB.SetMotor4(-power_ratio * maxPower * driveLeft)
+
+        # Turn Left
+        elif steering_angle < 0:
+            ZB.SetMotor1(-power_ratio * maxPower * driveRight)
+            ZB.SetMotor2(-power_ratio * maxPower * driveRight)
+            ZB.SetMotor3(-maxPower * driveLeft)
+            ZB.SetMotor4(-maxPower * driveLeft)
+        
+        else:
+            ZB.SetMotor1(-maxPower * driveRight)
+            ZB.SetMotor2(-maxPower * driveRight)
+            ZB.SetMotor3(-maxPower * driveLeft)
+            ZB.SetMotor4(-maxPower * driveLeft)
+
+
+
+
+
 	def ProcesImage(self, image):
 		#Image processing code here
 		if flippedImage:
@@ -94,6 +139,10 @@ class MoveYB(threading.Thread):
 		if self.lastImage is None:
 			self.lastImage = image.copy()
 			return
+
+
+
+    def Lane_Detection():
 		
 
 
