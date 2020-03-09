@@ -23,12 +23,13 @@ print 'Libraries loaded'
 global camera
 global ZB
 global processor
-global motion
 global running 
 # global steering_angle
+# global maxPower
 running = True
-motion = False
-# steering_angle = 10
+# motion = False
+
+
 
 # Setup the ZeroBorg
 ZB = ZeroBorg.ZeroBorg()
@@ -91,11 +92,11 @@ class MoveYB(threading.Thread):
 		self.start()
 
 	# print 'import after init'
-	def Power_Change(self,steering_angle):
+	def Power_Change(self, steering_angle):
 		distance_between_opposite_wheels = 14.5 /100. #m
 		diameter_of_wheel = 6.5/100. #m
 		intergration_time = 350./1000. #sec, TBD
-		w = steering_angle * distance_between_opposite_wheels / diameter_of_wheel / intergration_time
+		w = np.abs(steering_angle) * distance_between_opposite_wheels / diameter_of_wheel / intergration_time
 		power_ratio = 1. - w/300
 		return power_ratio
 
@@ -106,54 +107,58 @@ class MoveYB(threading.Thread):
 
 
 	def Turn_YB(self,steering_angle):
-		global motion
-		global ZB
+		# global motion
+		# global ZB
+		# global maxPower
 		# global steering_angle
-		motion = True
+		# motion = True
 		power_ratio = self.Power_Change(steering_angle)
-		print power_ratio
-		print maxPower
+		print 'power = ', power_ratio
+		print 'Max Power = ', maxPower
 
 		# Turn Right
 		if steering_angle > 0:
-			while steering_angle > 0:
-				print 'turning right'
-				ZB.SetMotor1(-maxPower * power_ratio)
-				ZB.SetMotor2(-maxPower * power_ratio)
-				ZB.SetMotor3(-maxPower)
-				ZB.SetMotor4(-maxPower)
-				print ZB.GetMotor1()
-				print ZB.GetMotor2()
-				print ZB.GetMotor3()
-				print ZB.GetMotor4()
+			# while steering_angle > 0:
+			print 'turning right'
+			ZB.SetMotor1(-maxPower * power_ratio)
+			ZB.SetMotor2(-maxPower * power_ratio)
+			ZB.SetMotor3(-maxPower)
+			ZB.SetMotor4(-maxPower)
+			print ZB.GetMotor1()
+			print ZB.GetMotor2()
+			print ZB.GetMotor3()
+			print ZB.GetMotor4()
 
 
 		# Turn Left
 		elif steering_angle < 0:
-			while steering_angle < 0:
-				print 'turning left'
-				ZB.SetMotor1(-maxPower)
-				ZB.SetMotor2(-maxPower)
-				ZB.SetMotor3(power_ratio * -maxPower)
-				ZB.SetMotor4(power_ratio * -maxPower)
-				print ZB.GetMotor1()
-				print ZB.GetMotor2()
-				print ZB.GetMotor3()
-				print ZB.GetMotor4()
+			# while steering_angle < 0:
+			print 'turning left'
+			ZB.SetMotor1(-maxPower)
+			ZB.SetMotor2(-maxPower)
+			ZB.SetMotor3(-power_ratio * maxPower)
+			ZB.SetMotor4(-power_ratio * maxPower)
+			print ZB.GetMotor1()
+			print ZB.GetMotor2()
+			print ZB.GetMotor3()
+			print ZB.GetMotor4()
 		
 		else:
-			while steering_angle == 0:
-				print 'going towards god'
-				ZB.SetMotor1(-maxPower)
-				ZB.SetMotor2(-maxPower)
-				ZB.SetMotor3(-maxPower)
-				ZB.SetMotor4(-maxPower)
-				print ZB.GetMotor1()
-				print ZB.GetMotor2()
-				print ZB.GetMotor3()
-				print ZB.GetMotor4()
+			# while steering_angle == 0:
+			print 'going towards god'
+			ZB.SetMotor1(-maxPower)
+			ZB.SetMotor2(-maxPower)
+			ZB.SetMotor3(-maxPower)
+			ZB.SetMotor4(-maxPower)
+			print ZB.GetMotor1()
+			print ZB.GetMotor2()
+			print ZB.GetMotor3()
+			print ZB.GetMotor4()
 				# print ZB.SetMotor1(-maxPower)
 				# ZB.SetLed(True)
+		return
+	
+	
 
 	def ProcesImage(self, image):
 		#Image processing code here
@@ -208,13 +213,21 @@ print 'Processor imported'
 capture = StreamInit()
 print 'capture imported'
 
+
+
 testing = True
 if testing:
 	try:
 		print 'begin testing'
+		# time.sleep(2)
 		processor.Turn_YB(30)
-		time.sleep(1.0)
-		processor.Turn_YB(-30)
+		# time.sleep(2.0)
+		processor.Turn_YB(20)
+		# time.sleep(5.0)
+		# processor.Turn_YB(-20)
+		# time.sleep(5.)
+		# processor.Turn_YB(-30)
+		# time.sleep(5.)
 	except KeyboardInterrupt:
 		print '\nUser shutdown testing'
 		ZB.MotorsOff()
@@ -229,7 +242,7 @@ if testing:
 try:
 	# ZB.MotorsOff()
 	while running:
-		ZB.SetLed(motion)
+		# ZB.SetLed(motion)
 		time.sleep(0.01)
 		
 	# ZB.MotorsOff()

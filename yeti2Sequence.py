@@ -31,7 +31,7 @@ ZB.ResetEpo()
 # Movement settings (worked out from our YetiBorg v2 on a smooth surface)
 timeForward1m = 5.7                     # Number of seconds needed to move about 1 meter
 timeSpin360   = 4.8                     # Number of seconds needed to make a full left / right spin
-testMode = True                        # True to run the motion tests, False to run the normal sequence
+testMode = False                        # True to run the motion tests, False to run the normal sequence
 
 # Power settings
 voltageIn = 8.4                         # Total battery voltage to the ZeroBorg (change to 9V if using a non-rechargeable battery)
