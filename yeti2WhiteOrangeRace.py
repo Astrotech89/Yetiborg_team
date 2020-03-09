@@ -11,7 +11,10 @@ import threading
 import picamera
 import picamera.array
 import cv2
-import numpy
+import numpy as np
+
+#Custom imports
+import support_functions as spf 
 
 
 
@@ -19,9 +22,10 @@ import numpy
 global camera
 global ZB
 global processor
-# global motionDetected
+global motion
 global running 
 running = True
+motion = False
 
 
 # Setup the ZeroBorg
@@ -81,52 +85,59 @@ class MoveYB(threading.Thread):
 		super(MoveYB, self).__init__()
 		self.stream = picamera.array.PiRGBArray(camera)
 
-	def ConstantVelocity(self,driveLeft,driveRight):
-		ZB.SetMotor1(-maxPower * driveRight)
-		ZB.SetMotor2(-maxPower * driveRight)
-		ZB.SetMotor3(-maxPower * driveLeft)
-		ZB.SetMotor4(-maxPower * driveLeft)
+	# def ConstantVelocity(self,driveLeft,driveRight):
+	# 	global motion
+	# 	motion = True
+	# 	ZB.SetMotor1(-maxPower * driveRight)
+	# 	ZB.SetMotor2(-maxPower * driveRight)
+	# 	ZB.SetMotor3(-maxPower * driveLeft)
+	# 	ZB.SetMotor4(-maxPower * driveLeft)
 
 
 
-    def Power_Change(steering_angle):
-        distance_between_opposite_wheels = 14.5 /100 #m
-        diameter_of_wheel = 6.5/100 #m
-        intergration_time = 350/1000 #sec, TBD
+	def Power_Change(self,steering_angle):
+		global motion
+		motion = True
 
-        velocity_change = distance_between_opposite_wheels * np.abs(steering_angle) / diameter_of_wheel / intergration_time / 3
-        w = 3 * diameter_of_wheel * velocity_change / distance_between_opposite_wheels
-        dw = w * distance_between_opposite_wheels / 6
-        power_ratio = 1 - dw/26
-        return power_ratio
+		distance_between_opposite_wheels = 14.5 /100 #m
+		diameter_of_wheel = 6.5/100 #m
+		intergration_time = 350/1000 #sec, TBD
 
-    
-    # ---------------------steering_angle calculation------------------------
-    steering_angle = 10
-    # ---------------------steering_angle calculation------------------------
+		velocity_change = distance_between_opposite_wheels * np.abs(steering_angle) / diameter_of_wheel / intergration_time / 3
+		w = 3 * diameter_of_wheel * velocity_change / distance_between_opposite_wheels
+		dw = w * distance_between_opposite_wheels / 6
+		power_ratio = 1 - dw/26
+		return power_ratio
+
+	
+	# ---------------------steering_angle calculation------------------------
+	steering_angle = 200
+	# ---------------------steering_angle calculation------------------------
 
 
-    def Turn_YB(self, driveLeft, driveRight, steering_angle):
-        power_ratio = Power_Change(steering_angle)
-        # Turn Right
-        if steering_angle > 0:
-            ZB.SetMotor1(-maxPower * driveRight)
-            ZB.SetMotor2(-maxPower * driveRight)
-            ZB.SetMotor3(-power_ratio * maxPower * driveLeft)
-            ZB.SetMotor4(-power_ratio * maxPower * driveLeft)
+	def Turn_YB(self, driveLeft, driveRight, steering_angle):
+		global motion
+		motion = True
+		power_ratio = Power_Change(steering_angle)
+		# Turn Right
+		if steering_angle > 0:
+			ZB.SetMotor1(-maxPower * driveRight)
+			ZB.SetMotor2(-maxPower * driveRight)
+			ZB.SetMotor3(-power_ratio * maxPower * driveLeft)
+			ZB.SetMotor4(-power_ratio * maxPower * driveLeft)
 
-        # Turn Left
-        elif steering_angle < 0:
-            ZB.SetMotor1(-power_ratio * maxPower * driveRight)
-            ZB.SetMotor2(-power_ratio * maxPower * driveRight)
-            ZB.SetMotor3(-maxPower * driveLeft)
-            ZB.SetMotor4(-maxPower * driveLeft)
-        
-        else:
-            ZB.SetMotor1(-maxPower * driveRight)
-            ZB.SetMotor2(-maxPower * driveRight)
-            ZB.SetMotor3(-maxPower * driveLeft)
-            ZB.SetMotor4(-maxPower * driveLeft)
+		# Turn Left
+		elif steering_angle < 0:
+			ZB.SetMotor1(-power_ratio * maxPower * driveRight)
+			ZB.SetMotor2(-power_ratio * maxPower * driveRight)
+			ZB.SetMotor3(-maxPower * driveLeft)
+			ZB.SetMotor4(-maxPower * driveLeft)
+		
+		else:
+			ZB.SetMotor1(-maxPower * driveRight)
+			ZB.SetMotor2(-maxPower * driveRight)
+			ZB.SetMotor3(-maxPower * driveLeft)
+			ZB.SetMotor4(-maxPower * driveLeft)
 
 
 
@@ -142,9 +153,8 @@ class MoveYB(threading.Thread):
 
 
 
-    def Lane_Detection():
+	# def Lane_Detection():
 		
-
 
 
 class StreamInit(threading.Thread):
@@ -183,3 +193,27 @@ print 'Setup stream processing thread'
 
 processor = MoveYB()
 capture = StreamInit()
+
+try:
+	ZB.MotorsOff()
+	while running:
+		ZB.SetLed(motion)
+		time.sleep(0.01)
+		
+	ZB.MotorsOff()
+except KeyboardInterrupt:
+	print '\nUser shutdown'
+	ZB.MotorsOff()
+except:
+	e = sys.exc_info()[0]
+	print
+	print e
+	print '\nUnexpected error, shutting down!'
+	ZB.MotorsOff()
+running = False
+capture.join()
+processor.terminated = True
+processor.join()
+del camera
+ZB.SetLed(False)
+print 'Program terminated'

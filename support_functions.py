@@ -1,7 +1,5 @@
 import cv2
 import numpy as np 
-import matplotlib.pyplot as plt 
-import matplotlib
 import math
 
 
@@ -217,32 +215,3 @@ def Power_Change(steering_angle):
     power_ratio = 1 - dw/26
 
     return power_ratio
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-b
-
-
-
-
-
-
-
-
-
