@@ -19,7 +19,10 @@ import numpy
 global camera
 global ZB
 global processor
-global motionDetected
+# global motionDetected
+global running 
+running = True
+
 
 # Setup the ZeroBorg
 ZB = ZeroBorg.ZeroBorg()
@@ -73,9 +76,9 @@ else:
 	maxPower = voltageOut / float(voltageIn)
 
 
-class MoveZB(threading.Thread):
+class MoveYB(threading.Thread):
 	def __init__(self):
-		super(MoveZB, self).__init__()
+		super(MoveYB, self).__init__()
 		self.stream = picamera.array.PiRGBArray(camera)
 
 	def ConstantVelocity(self,driveLeft,driveRight):
@@ -83,3 +86,51 @@ class MoveZB(threading.Thread):
 		ZB.SetMotor2(-maxPower * driveRight)
 		ZB.SetMotor3(-maxPower * driveLeft)
 		ZB.SetMotor4(-maxPower * driveLeft)
+
+	def ProcesImage(self, image):
+		#Image processing code here
+		if flippedImage:
+			image = cv2.flip(image, -1)
+		if self.lastImage is None:
+			self.lastImage = image.copy()
+			return
+		
+
+
+
+class StreamInit(threading.Thread):
+	def __init__(self):
+		super(StreamInit, self).__init__()
+		self.start()
+
+	def run(self):
+		global camera
+		global processor
+		camera.capture_sequence(self.TriggerStream(), format='rgb', use_video_port=True)
+		print 'Terminating stream'
+		processor.terminated = True
+		processor.join()
+		print 'Stream Terminated'
+
+	def TriggerStream(self):
+		global running
+		while running:
+			if processor.event.is_set():
+				time.sleep(0.01)
+			else:
+				yield processor.stream
+				processor.event.set()
+
+
+#Run Sequence
+print 'Camera Setup'
+camera = picamera.PiCamera()
+camera.resolution = (imageWidth,imageHeight)
+camera.framerate = frameRate
+imageCenterX = imageWidth / 2.0
+imageCenterY = imageHeight / 2.0
+
+print 'Setup stream processing thread'
+
+processor = MoveYB()
+capture = StreamInit()
