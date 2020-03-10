@@ -167,6 +167,10 @@ def steering_angle_calculation(lane_lines, edges):
         x_offset = x2 - x1
         y_offset = int(height / 2)
 
+    if len(lane_lines) == 0:
+        x_offset = 0
+        y_offset = int(height / 2)
+
     angle_to_mid_radian = math.atan(x_offset / y_offset)  # angle (in radian) to center vertical line
     angle_to_mid_deg = int(angle_to_mid_radian * 180.0 / math.pi)  # angle (in degrees) to center vertical line
     steering_angle = angle_to_mid_deg + 90  # this is the steering angle needed by picar front wheel

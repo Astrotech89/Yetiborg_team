@@ -89,35 +89,61 @@ class MoveYB(threading.Thread):
 		super(MoveYB, self).__init__()
 		self.stream = picamera.array.PiRGBArray(camera)
 		self.event = threading.Event()
+		self.terminated = False
 		self.start()
 
-	# print 'import after init'
-	def Power_Change(self, steering_angle):
+	def run(self):
+	# This method runs in a separate thread
+		while not self.terminated:
+			# Wait for an image to be written to the stream
+			if self.event.wait(1):
+				try:
+					# Read the image and do some processing on it
+					self.stream.seek(0)
+					self.steering_angle = self.ProcessImage(self.stream.array)
+					self.Turn_YB()
+
+				finally:
+					# Reset the stream and event
+					self.stream.seek(0)
+					self.stream.truncate()
+					self.event.clear()
+	
+	
+	def ProcessImage(self, image):
+		#Image processing code here
+		if flippedImage:
+			image = cv2.flip(image, -1)
+		# if self.lastImage is None:
+		# 	self.lastImage = image.copy()
+		
+		steering_angle = spf.auto_guide(image)
+
+		return steering_angle
+
+
+	def Power_Change(self):
 		distance_between_opposite_wheels = 14.5 /100. #m
 		diameter_of_wheel = 6.5/100. #m
 		intergration_time = 350./1000. #sec, TBD
-		w = np.abs(steering_angle) * distance_between_opposite_wheels / diameter_of_wheel / intergration_time
+		w = np.abs(self.steering_angle) * distance_between_opposite_wheels / diameter_of_wheel / intergration_time
 		power_ratio = 1. - w/300
-		return power_ratio
+		return np.abs(power_ratio)
 
-	
-	# ---------------------steering_angle calculation------------------------
-	# steering_angle = 200
-	# ---------------------steering_angle calculation------------------------
-
-
-	def Turn_YB(self,steering_angle):
+	def Turn_YB(self):
 		# global motion
 		# global ZB
 		# global maxPower
 		# global steering_angle
 		# motion = True
-		power_ratio = self.Power_Change(steering_angle)
-		print 'power = ', power_ratio
-		print 'Max Power = ', maxPower
+		buffer = 5.
+		power_ratio = self.Power_Change()
+		# print 'power = ', power_ratio
+		# print 'Max Power = ', maxPower
+
 
 		# Turn Right
-		if steering_angle > 0:
+		if self.steering_angle > buffer:
 			# while steering_angle > 0:
 			print 'turning right'
 			ZB.SetMotor1(-maxPower * power_ratio)
@@ -131,13 +157,13 @@ class MoveYB(threading.Thread):
 
 
 		# Turn Left
-		elif steering_angle < 0:
+		elif self.steering_angle < buffer:
 			# while steering_angle < 0:
 			print 'turning left'
 			ZB.SetMotor1(-maxPower)
 			ZB.SetMotor2(-maxPower)
-			ZB.SetMotor3(-power_ratio * maxPower)
-			ZB.SetMotor4(-power_ratio * maxPower)
+			ZB.SetMotor3(power_ratio * -maxPower)
+			ZB.SetMotor4(power_ratio * -maxPower)
 			print ZB.GetMotor1()
 			print ZB.GetMotor2()
 			print ZB.GetMotor3()
@@ -160,16 +186,7 @@ class MoveYB(threading.Thread):
 	
 	
 
-	def ProcesImage(self, image):
-		#Image processing code here
-		if flippedImage:
-			image = cv2.flip(image, -1)
-		if self.lastImage is None:
-			self.lastImage = image.copy()
 
-
-
-	# def Lane_Detection():
 		
 
 
@@ -206,48 +223,42 @@ imageCenterX = imageWidth / 2.0
 imageCenterY = imageHeight / 2.0
 
 print 'Setup stream processing thread'
-
-processor = MoveYB()
-print 'Processor imported'
-# time.sleep(2)
-capture = StreamInit()
-print 'capture imported'
-
-
-
-testing = True
-if testing:
-	try:
-		print 'begin testing'
-		# time.sleep(2)
-		processor.Turn_YB(30)
-		# time.sleep(2.0)
-		processor.Turn_YB(20)
-		# time.sleep(5.0)
-		# processor.Turn_YB(-20)
-		# time.sleep(5.)
-		# processor.Turn_YB(-30)
-		# time.sleep(5.)
-	except KeyboardInterrupt:
-		print '\nUser shutdown testing'
-		ZB.MotorsOff()
-	except:
-		e = sys.exc_info()
-		print
-		print e
-		print '\nUnexpected error, shutting down testing!'
-		ZB.MotorsOff()
-
-
 try:
+	processor = MoveYB()
+	print 'Processor imported'
+	time.sleep(2)
+	capture = StreamInit()
+	print 'capture imported'
+
+
+
+# testing = False
+# if testing:
+# 	try:
+# 		print 'begin testing'
+# 		processor = MoveYB()
+# 	except KeyboardInterrupt:
+# 		print '\nUser shutdown testing'
+# 		ZB.MotorsOff()
+# 	except:
+# 		e = sys.exc_info()
+# 		print
+# 		print e
+# 		print '\nUnexpected error, shutting down testing!'
+# 		ZB.MotorsOff()
+
+
+
 	# ZB.MotorsOff()
 	while running:
-		# ZB.SetLed(motion)
+		ZB.SetLed(True)
 		time.sleep(0.01)
 		
 	# ZB.MotorsOff()
 except KeyboardInterrupt:
 	print '\nUser shutdown'
+	processor.terminated = True
+	running = False
 	ZB.MotorsOff()
 except:
 	e = sys.exc_info()[0]
@@ -255,9 +266,10 @@ except:
 	print e
 	print '\nUnexpected error, shutting down!'
 	ZB.MotorsOff()
-running = False
+	
+# running = False
 capture.join()
-processor.terminated = True
+# processor.terminated = True
 processor.join()
 del camera
 ZB.SetLed(False)
