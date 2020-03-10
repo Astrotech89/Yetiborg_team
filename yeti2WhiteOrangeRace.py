@@ -136,22 +136,13 @@ class MoveYB(threading.Thread):
 			print 'turning left'
 			ZB.SetMotor1(-maxPower)
 			ZB.SetMotor2(-maxPower)
-<<<<<<< Updated upstream
 			ZB.SetMotor3(-power_ratio * maxPower)
 			ZB.SetMotor4(-power_ratio * maxPower)
-=======
-			ZB.SetMotor3(power_ratio * -maxPower)
-			ZB.SetMotor4(power_ratio * -maxPower)
->>>>>>> Stashed changes
 			print ZB.GetMotor1()
 			print ZB.GetMotor2()
 			print ZB.GetMotor3()
 			print ZB.GetMotor4()
-<<<<<<< Updated upstream
 		
-=======
-	
->>>>>>> Stashed changes
 		else:
 			# while steering_angle == 0:
 			print 'going towards god'
@@ -163,11 +154,7 @@ class MoveYB(threading.Thread):
 			print ZB.GetMotor2()
 			print ZB.GetMotor3()
 			print ZB.GetMotor4()
-<<<<<<< Updated upstream
 				# print ZB.SetMotor1(-maxPower)
-=======
-			# print ZB.SetMotor1(-maxPower)
->>>>>>> Stashed changes
 				# ZB.SetLed(True)
 		return
 	
@@ -232,7 +219,6 @@ testing = True
 if testing:
 	try:
 		print 'begin testing'
-<<<<<<< Updated upstream
 		# time.sleep(2)
 		processor.Turn_YB(30)
 		# time.sleep(2.0)
@@ -242,12 +228,6 @@ if testing:
 		# time.sleep(5.)
 		# processor.Turn_YB(-30)
 		# time.sleep(5.)
-=======
-		# processor.Turn_YB(30)
-		# time.sleep(1.0)
-		# processor.Turn_YB(-30)
-		# time.sleep(1.0)
->>>>>>> Stashed changes
 	except KeyboardInterrupt:
 		print '\nUser shutdown testing'
 		ZB.MotorsOff()
