@@ -1,7 +1,5 @@
 import cv2
 import numpy as np 
-import matplotlib.pyplot as plt 
-import matplotlib
 import math
 
 
@@ -57,6 +55,7 @@ def region_of_interest(edges):
         (width, height),
         (0, height),
     ]], np.int32)
+    
 
     # Fill the masked part of the image with black color 
     cv2.fillPoly(mask, rect_mask, 255)
@@ -91,11 +90,14 @@ def make_points(frame, line):
     # Make points between the 4/5 the 2/5 of the height of the image 
     y1 = int(height * 4 / 5)  
     y2 = int(y1 * 1 / 2)  
-
+    if slope != 0 :
     # bound the coordinates within the frame
-    x1 = max(-width, min(2 * width, int((y1 - intercept) / slope)))
-    x2 = max(-width, min(2 * width, int((y2 - intercept) / slope)))
-
+        x1 = max(-width, min(2 * width, int((y1 - intercept) / slope)))
+        x2 = max(-width, min(2 * width, int((y2 - intercept) / slope)))
+    if slope ==0 : 
+        slope = 0.01
+        x1 = 0
+        x2 = 0
     return [[x1, y1, x2, y2]]
 
 
@@ -109,7 +111,7 @@ def lane_lines_calculation(frame, line_segments):
     '''
     lane_lines = []
     if line_segments is None:
-        print ('No line_segment segments detected')
+        print ('No line segment segments detected')
         return lane_lines
 
     height, width, _ = frame.shape
@@ -136,13 +138,14 @@ def lane_lines_calculation(frame, line_segments):
                 if x1 > right_region_boundary and x2 > right_region_boundary:
                     right_fit.append((slope, intercept))
 
-    left_fit_average = np.average(left_fit, axis=0)
-    if len(left_fit) > 0:
-        lane_lines.append(make_points(frame, left_fit_average))
-
-    right_fit_average = np.average(right_fit, axis=0)
-    if len(right_fit) > 0:
-        lane_lines.append(make_points(frame, right_fit_average))
+    if left_fit != None:
+        left_fit_average = np.average(left_fit, axis=0)
+        if len(left_fit) > 0:
+            lane_lines.append(make_points(frame, left_fit_average))
+    if right_fit != None:
+        right_fit_average = np.average(right_fit, axis=0)
+        if len(right_fit) > 0:
+            lane_lines.append(make_points(frame, right_fit_average))
 
     return lane_lines
 
@@ -169,9 +172,16 @@ def steering_angle_calculation(lane_lines, edges):
         x_offset = x2 - x1
         y_offset = int(height / 2)
 
-    angle_to_mid_radian = math.atan(x_offset / y_offset)  # angle (in radian) to center vertical line
+    if len(lane_lines) == 0:
+        x_offset = 1.
+        y_offset = np.pi / 4.
+
+    if x_offset == 0:
+        angle_to_mid_radian = 1
+    if x_offset != 0:
+        angle_to_mid_radian = math.atan(y_offset / x_offset)  # angle (in radian) to center vertical line
     angle_to_mid_deg = int(angle_to_mid_radian * 180.0 / math.pi)  # angle (in degrees) to center vertical line
-    steering_angle = angle_to_mid_deg + 90  # this is the steering angle needed by picar front wheel
+    steering_angle = angle_to_mid_deg   # this is the steering angle needed by picar front wheel
 
     return steering_angle
 
@@ -197,11 +207,11 @@ def auto_guide(frame, color='orange'):
     lane_lines = lane_lines_calculation(frame, lane)
     steering_angle = steering_angle_calculation(lane_lines, edges)
 
-    if steering_angle - 90 < 10:
-        steering_angle = 90
+    if steering_angle  < 3:
+        steering_angle = 0
     else:
         pass
-
+        print 'steerting angle = ', steering_angle
     return steering_angle
 
 
@@ -217,32 +227,3 @@ def Power_Change(steering_angle):
     power_ratio = 1 - dw/26
 
     return power_ratio
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-b
-
-
-
-
-
-
-
-
-
