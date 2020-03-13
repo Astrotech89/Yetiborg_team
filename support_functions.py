@@ -1,6 +1,8 @@
 import cv2
 import numpy as np 
 import math
+import matplotlib.pyplot as plt 
+import matplotlib
 
 
 def mask_color(frame, color, min_edge_threshold=100, max_edge_threshold=200):
@@ -13,8 +15,8 @@ def mask_color(frame, color, min_edge_threshold=100, max_edge_threshold=200):
 
     white = [[220,220,220],[255,255,255]]
     # Trial for HSV coding (doesn't work right now)
-    # orange = [[14, 25, 85], [23, 100, 100]]
-    orange = [[210, 140, 100], [240, 200, 180]]
+    orange = [[2, 50, 100], [15, 180, 255]]
+    # orange = [[210, 140, 100], [240, 200, 180]]
 
     if color=='white':
 
@@ -50,10 +52,10 @@ def region_of_interest(edges):
     # Make a rectangle to mask the region of interest in the image
     # In this case it masks out the bottom 2/5 part of the image with width equal to the image width
     rect_mask = np.array([[
-        (0, height * 2 / 5),
-        (width, height * 2 / 5),
-        (width, height),
-        (0, height),
+        (0, height * 1.8 / 5),
+        (width, height * 1.8 / 5),
+        (width, height * 3 / 5),
+        (0, height * 3 / 5),
     ]], np.int32)
     
 
@@ -177,11 +179,17 @@ def steering_angle_calculation(lane_lines, edges):
         y_offset = np.pi / 4.
 
     if x_offset == 0:
-        angle_to_mid_radian = 1
+        angle_to_mid_radian = 0
+
     if x_offset != 0:
         angle_to_mid_radian = math.atan(y_offset / x_offset)  # angle (in radian) to center vertical line
+
     angle_to_mid_deg = int(angle_to_mid_radian * 180.0 / math.pi)  # angle (in degrees) to center vertical line
-    steering_angle = angle_to_mid_deg   # this is the steering angle needed by picar front wheel
+    steering_angle = -angle_to_mid_deg   # this is the steering angle needed by picar front wheel
+
+
+   
+
 
     return steering_angle
 
@@ -189,30 +197,16 @@ def steering_angle_calculation(lane_lines, edges):
 
 
 
-def load_image(path, convert=False):
+def load_image(path, convert=True):
     img_bgr = cv2.imread(path)
     if convert:
-        img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+        img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
     else:
         img = img_bgr
     return img
 
 
-def auto_guide(frame, color='orange'):
-    
 
-    output, edges = mask_color(frame, color=color, min_edge_threshold=110, max_edge_threshold=330)
-    cropped_edges = region_of_interest(edges)
-    lane = detect_line_segments(cropped_edges, rho=10, angle=np.pi / 180, min_threshold=5, minLineLength=10, maxLineGap=5)
-    lane_lines = lane_lines_calculation(frame, lane)
-    steering_angle = steering_angle_calculation(lane_lines, edges)
-
-    if steering_angle  < 3:
-        steering_angle = 0
-    else:
-        pass
-        print 'steerting angle = ', steering_angle
-    return steering_angle
 
 
 
@@ -224,6 +218,83 @@ def Power_Change(steering_angle):
     velocity_change = distance_between_opposite_wheels * np.abs(steering_angle) / diameter_of_wheel / intergration_time / 3
     w = 3 * diameter_of_wheel * velocity_change / distance_between_opposite_wheels
     dw = w * distance_between_opposite_wheels / 6
-    power_ratio = 1 - dw/26
+    power_ratio = 1 - dw/200
 
     return power_ratio
+
+
+
+
+def display_lines(frame, lines, steering_angle, line_color=(0, 255, 0), steering_line_color=(255, 0, 0), line_width=80):
+    '''
+    Returns the frame with the lane lines and a line which visulizes the steering angle
+    The line which resembles the steering angle always starts at the center bottom of the frame
+
+        ---------------Note--------------- 
+            0-89 degree: turn left
+            90 degree: going straight
+            91-180 degree: turn righ
+        ----------------------------------
+    '''
+
+    line_image = np.zeros_like(frame)
+    line_image2 = np.zeros_like(frame)
+    heading_image = np.zeros_like(frame)
+    height, width, _ = frame.shape
+
+
+    steering_angle_radian = steering_angle / 180.0 * math.pi
+    x1 = int(width / 2)
+    y1 = height
+    x2 = int(x1 - height / 2 / math.tan(steering_angle_radian))
+    y2 = int(height / 2)
+
+    cv2.line(heading_image, (x1, y1), (x2, y2), steering_line_color, line_width)
+    
+
+    if lines is not None:
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
+
+    line_image = cv2.addWeighted(frame, 0, line_image, 1, 1)
+    steering_angle_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
+    final_image = cv2.addWeighted(line_image, 1, steering_angle_image, 1, 1)
+    plt.imshow(final_image)
+    return final_image
+
+
+
+
+def auto_guide(frame, show_plot_flag, color='orange'):
+    
+
+    output, edges = mask_color(frame, color=color, min_edge_threshold=110, max_edge_threshold=330)
+    cropped_edges = region_of_interest(edges)
+    lane = detect_line_segments(cropped_edges, rho=10, angle=np.pi / 180, min_threshold=5, minLineLength=10, maxLineGap=5)
+    lane_lines = lane_lines_calculation(frame, lane)
+    steering_angle = steering_angle_calculation(lane_lines, edges) 
+
+    if steering_angle < 0:
+        corr_steering_angle = -90 - steering_angle
+    
+    if steering_angle > 0:
+        corr_steering_angle = 90 - steering_angle
+
+    # print 'steering angle = ', corr_steering_angle
+
+    
+
+    if np.abs(corr_steering_angle)  < 3:
+        corr_steering_angle = 0
+    else:
+        pass
+
+
+    if show_plot_flag:
+        display_lines(output, lane_lines, steering_angle, line_width=40)
+    else:
+        pass
+
+
+    return corr_steering_angle
