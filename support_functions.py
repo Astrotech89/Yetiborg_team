@@ -1,9 +1,13 @@
-import cv2
-import numpy as np 
-import matplotlib.pyplot as plt 
-import matplotlib
-import math
+#!/usr/bin/env python
+# coding: utf-8
 
+# In[33]:
+
+
+import cv2
+import numpy as np
+import math
+import matplotlib.pyplot as plt
 
 def mask_color(frame, color, min_edge_threshold=100, max_edge_threshold=200):
     '''
@@ -37,7 +41,6 @@ def mask_color(frame, color, min_edge_threshold=100, max_edge_threshold=200):
 
 
 
-#  
 def region_of_interest(edges):
 
     '''
@@ -58,7 +61,7 @@ def region_of_interest(edges):
         (0, height),
     ]], np.int32)
 
-    # Fill the masked part of the image with black color 
+    # Fill the masked part of the image with black color
     cv2.fillPoly(mask, rect_mask, 255)
 
     # Find the edges of the cropped image
@@ -70,11 +73,11 @@ def region_of_interest(edges):
 
 def detect_line_segments(cropped_edges, rho=5, angle=np.pi / 180, min_threshold=5, minLineLength=8, maxLineGap=4):
     '''
-    Returns the line segments calculated by an edges image 
+    Returns the line segments calculated by an edges image
     (In our case it is the edges of the cropped image)
     '''
 
-    line_segments = cv2.HoughLinesP(cropped_edges, rho, angle, min_threshold, 
+    line_segments = cv2.HoughLinesP(cropped_edges, rho, angle, min_threshold,
                                     np.array([]), minLineLength, maxLineGap)
 
     return line_segments
@@ -88,9 +91,9 @@ def make_points(frame, line):
 
     height, width, _ = frame.shape
     slope, intercept = line
-    # Make points between the 4/5 the 2/5 of the height of the image 
-    y1 = int(height * 4 / 5)  
-    y2 = int(y1 * 1 / 2)  
+    # Make points between the 4/5 the 2/5 of the height of the image
+    y1 = int(height * 4 / 5)
+    y2 = int(y1 * 1 / 2)
 
     # bound the coordinates within the frame
     x1 = max(-width, min(2 * width, int((y1 - intercept) / slope)))
@@ -116,7 +119,7 @@ def lane_lines_calculation(frame, line_segments):
     left_fit = []
     right_fit = []
 
-    
+
     boundary = 1/3
     left_region_boundary = width * (1 - boundary)  # left lane line segment should be on left 2/3 of the screen
     right_region_boundary = width * boundary # right lane line segment should be on left 2/3 of the screen
@@ -152,7 +155,7 @@ def steering_angle_calculation(lane_lines, edges):
     '''
     Returns the steering angle from the beginning and endpoints of the lane lines
 
-    If there is only one lane the steering angle is essentially the same as the 
+    If there is only one lane the steering angle is essentially the same as the
     slope of the single detected lane line
     '''
 
@@ -178,70 +181,118 @@ def steering_angle_calculation(lane_lines, edges):
 
 
 
+# def display_lines(frame, lines, steering_angle, line_color=(0, 255, 0), steering_line_color=(0, 0, 255), line_width=80):
+#     '''
+#     Returns the frame with the lane lines and a line which visulizes the steering angle
+#     The line which resembles the steering angle always starts at the center bottom of the frame
 
-def load_image(path, convert=False):
-    img_bgr = cv2.imread(path)
-    if convert:
-        img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-    else:
-        img = img_bgr
-    return img
+#         ---------------Note---------------
+#             0-89 degree: turn left
+#             90 degree: going straight
+#             91-180 degree: turn righ
+#         ----------------------------------
+#     '''
+
+#     line_image = np.zeros_like(frame)
+#     heading_image = np.zeros_like(frame)
+#     height, width, _ = frame.shape
 
 
-def auto_guide(frame, color='orange'):
-    
+#     steering_angle_radian = steering_angle / 180.0 * math.pi
+#     x1 = int(width / 2)
+#     y1 = height
+#     x2 = int(x1 - height / 2 / math.tan(steering_angle_radian))
+#     y2 = int(height / 2)
+
+#     cv2.line(heading_image, (x1, y1), (x2, y2), steering_line_color, line_width)
+
+
+#     if lines is not None:
+#         for line in lines:
+#             for x1, y1, x2, y2 in line:
+#                 cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
+
+#     line_image = cv2.addWeighted(frame, 0, line_image, 1, 1)
+#     steering_angle_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
+#     final_image = cv2.addWeighted(line_image, 1, steering_angle_image, 1, 1)
+#     return final_image
+
+
+
+
+# def comparison_plot(frame_1, frame_2):
+#     '''
+#     Two subplots in a figure to compare (well used to check if the selected color mask is correct)
+#     '''
+
+#     plt.figure(figsize=(12,12))
+
+#     plt.subplot(121)
+#     im1 = plt.imshow(frame_1)
+#     plt.title('Frame 1')
+#     plt.axis('off')
+#     plt.subplot(122)
+#     im2 = plt.imshow(frame_2)
+#     plt.title('Frame 2')
+#     plt.axis('off')
+#     plt.show()
+
+# def load_image(path, convert=False):
+#     img_bgr = cv2.imread(path)
+#     if convert:
+#         img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+#     else:
+#         img = img_bgr
+#     return img
+
+
+def auto_guide(frame, color='orange', show_plot_flag = False):
+
 
     output, edges = mask_color(frame, color=color, min_edge_threshold=110, max_edge_threshold=330)
+    # comparison_plot(output, edges)
     cropped_edges = region_of_interest(edges)
     lane = detect_line_segments(cropped_edges, rho=10, angle=np.pi / 180, min_threshold=5, minLineLength=10, maxLineGap=5)
     lane_lines = lane_lines_calculation(frame, lane)
     steering_angle = steering_angle_calculation(lane_lines, edges)
+    # lane_lines_image = display_lines(output, lane_lines, steering_angle, line_width=40)
+    # print(steering_angle)
+    # plt.imshow(lane_lines_image)
 
-    if steering_angle - 90 < 10:
-        steering_angle = 90
-    else:
-        pass
+    if show_plot_flag:
+        lane_lines_image = display_lines(output, lane_lines, steering_angle, line_width=40)
+        plt.imshow(lane_lines_image)
+        plt.show()
 
-    return steering_angle
+        
+    corr_stering_angle = steering_angle - 90
 
-
-
-def Power_Change(steering_angle):
-    distance_between_opposite_wheels = 14.5 /100 #m
-    diameter_of_wheel = 6.5/100 #m
-    intergration_time = 350/1000 #sec, TBD
-
-    velocity_change = distance_between_opposite_wheels * np.abs(steering_angle) / diameter_of_wheel / intergration_time / 3
-    w = 3 * diameter_of_wheel * velocity_change / distance_between_opposite_wheels
-    dw = w * distance_between_opposite_wheels / 6
-    power_ratio = 1 - dw/26
-
-    return power_ratio
+    # print 'steering angle = ', cor_steering_angle
 
 
 
+#     if np.abs(corr_stering_angle)  < 3:
+#         corr_stering_angle = 0
+
+    return corr_stering_angle
 
 
+# In[34]:
 
 
+path = 'straight_80.jpg'
+img = load_image(path, convert=True)
+steering_angle = auto_guide(img, show_plot_flag=True)
+print(steering_angle)
 
 
-
-
-
-
+# In[ ]:
 
 
 
 
 
-
-b
-
-
-
-
-
+# In[ ]:
 
 
 
