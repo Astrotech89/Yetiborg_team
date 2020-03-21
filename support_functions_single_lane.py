@@ -5,7 +5,7 @@ import math
 # import matplotlib
 
 
-def mask_color(frame, color_list, color, min_edge_threshold=100, max_edge_threshold=200):
+def mask_color(frame, color, min_edge_threshold=100, max_edge_threshold=200):
     '''
     Makes a color mask for two colors
     Applies the mask to the image
@@ -13,10 +13,12 @@ def mask_color(frame, color_list, color, min_edge_threshold=100, max_edge_thresh
     2) Returns the edges of the image
     '''
 
-    white = [[220,220,220],[255,255,255]]
+    # white = [[220,220,220],[255,255,255]]
+    white = [[70, 10, 160], [255, 255, 255]]
     # Trial for HSV coding (doesn't work right now)
-    orange = color_list
+    # orange = [[1, 10, 60], [15, 200, 220]]
     # orange = [[210, 140, 100], [240, 200, 180]]
+    orange = [[1, 10, 60], [15, 200, 220]]
 
     if color=='white':
 
@@ -29,6 +31,7 @@ def mask_color(frame, color_list, color, min_edge_threshold=100, max_edge_thresh
         
 
     mask = cv2.inRange(frame, lower ,upper)
+    np.savetxt(mask)
     output = cv2.bitwise_and(frame, frame, mask = mask)
 
     edges = cv2.Canny(output, min_edge_threshold, max_edge_threshold)
@@ -78,23 +81,25 @@ def detect_line_segments(cropped_edges, rho=1, angle=np.pi / 180, min_threshold=
 
     line_segments = cv2.HoughLinesP(cropped_edges, rho, angle, min_threshold, 
                                     np.array([]), minLineLength, maxLineGap)
-    # print(line_segments[0])
 
-    x1_list = []
-    y1_list = []
-    x2_list = []
-    # y2_list = []
-    # for line_segment in line_segments:
-    #     for x1, y1, x2, y2 in line_segment:
-    # print(np.shape(list(line_segments[:,0,0]) + list(line_segments[:,0,2])))
     
+
     
-    x = np.average(list(line_segments[:,0,0]) + list(line_segments[:,0,2]))
-    y = np.average(list(line_segments[:,0,1]) + list(line_segments[:,0,3]))
-    calc = y/x
+
+    # x = np.nanmean(np.array((line_segments[:,0,0]).tolist() + (line_segments[:,0,2]).tolist()))
+    x1 = line_segments[:,0,0]
+    x2 = line_segments[:,0,2]
+    x = np.mean((x1,x2))
+    
+    # y = np.nanmean(np.array((line_segments[:,0,1]).tolist() + (line_segments[:,0,3]).tolist()))
+    y = np.mean(np.append(line_segments[:,0,1],line_segments[:,0,3]))
+    # else:
+
+    # calc = y/x
+
     # print (calc)
+    # if x != None:
     return line_segments, x, y
-
 
 
 def make_points(frame, line):
@@ -181,51 +186,55 @@ def load_image(path, convert=True):
 
 
 
-def display_lines(frame, lines, steering_angle, line_color=(0, 255, 0), steering_line_color=(255, 0, 0), line_width=80):
-    '''
-    Returns the frame with the lane lines and a line which visulizes the steering angle
-    The line which resembles the steering angle always starts at the center bottom of the frame
+# def display_lines(frame, lines, steering_angle, line_color=(0, 255, 0), steering_line_color=(255, 0, 0), line_width=80):
+#     '''
+#     Returns the frame with the lane lines and a line which visulizes the steering angle
+#     The line which resembles the steering angle always starts at the center bottom of the frame
 
-        ---------------Note--------------- 
-            0-89 degree: turn left
-            90 degree: going straight
-            91-180 degree: turn righ
-        ----------------------------------
-    '''
+#         ---------------Note--------------- 
+#             0-89 degree: turn left
+#             90 degree: going straight
+#             91-180 degree: turn righ
+#         ----------------------------------
+#     '''
 
     
 
-    line_image = np.zeros_like(frame)
-    heading_image = np.zeros_like(frame)
-    height, width, _ = frame.shape
+#     line_image = np.zeros_like(frame)
+#     heading_image = np.zeros_like(frame)
+#     height, width, _ = frame.shape
 
 
-    steering_angle_radian = -(steering_angle)
-    x1 = int(width / 2)
-    y1 = height
-    y2 = int(height/2)
-    x2 = int(y2/steering_angle)
+#     steering_angle_radian = -(steering_angle)
+#     x1 = int(width / 2)
+#     y1 = height
+#     y2 = int(height/2)
+#     x2 = int(y2/steering_angle)
 
-    cv2.line(heading_image, (x1, y1), (x2, y2), steering_line_color, line_width)
+#     cv2.line(heading_image, (x1, y1), (x2, y2), steering_line_color, line_width)
     
 
-    for x1, y1, x2, y2 in lines:
-        cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
+#     for x1, y1, x2, y2 in lines:
+#         cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
 
-    line_image = cv2.addWeighted(frame, 0, line_image, 1, 1)
-    final_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
-    final_image = cv2.addWeighted(line_image, 1, steering_angle_image, 1, 1)
+#     line_image = cv2.addWeighted(frame, 0, line_image, 1, 1)
+#     final_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
+#     final_image = cv2.addWeighted(line_image, 1, steering_angle_image, 1, 1)
 
-    plt.imshow(final_image)
-    return final_image
-
-
+#     # plt.imshow(final_image)
+#     return final_image
 
 
-def auto_guide(frame, color_list, show_plot_flag=False):
+
+
+def auto_guide(frame, show_plot_flag=False):
     
-    # img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    output, edges = mask_color(img, color_list, color='orange', min_edge_threshold=0, max_edge_threshold=100)
+    img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    output, edges = mask_color(img, color='white', min_edge_threshold=0, max_edge_threshold=100)
+    np.savetxt('edges.txt',edges)
+    np.savetxt('output.txt',output[:,:,0])
+    # np.savetxt('frame1')
+    # np.savetxt('output.txt',output)
     # cropped_edges = region_of_interest(edges)
     lane, x, y = detect_line_segments(edges, rho=10, angle=np.pi / 180, min_threshold=5, minLineLength=10, maxLineGap=5)
 

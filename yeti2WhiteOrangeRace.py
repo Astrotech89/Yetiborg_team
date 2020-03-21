@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 
 #Custom imports
-import support_functions as spf 
+import support_functions_single_lane as spf 
 
 sys.stdout = sys.stderr
 print 'Libraries loaded'
@@ -116,7 +116,9 @@ class MoveYB(threading.Thread):
 			image = cv2.flip(image, -1)
 		# if self.lastImage is None:
 		# 	self.lastImage = image.copy()
-		
+
+		# a = spf.detect_line_segments(image)
+		# print np.shape(a)
 		steering_angle = spf.auto_guide(image,show_plot_flag=False)
 
 		return steering_angle
