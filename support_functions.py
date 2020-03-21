@@ -15,7 +15,7 @@ def mask_color(frame, color, min_edge_threshold=100, max_edge_threshold=200):
 
     white = [[220,220,220],[255,255,255]]
     # Trial for HSV coding (doesn't work right now)
-    orange = [[2, 50, 100], [15, 180, 255]]
+    orange = [[2, 80, 50], [15, 180, 255]]
     # orange = [[210, 140, 100], [240, 200, 180]]
 
     if color=='white':
@@ -176,7 +176,7 @@ def steering_angle_calculation(lane_lines, edges):
 
     if len(lane_lines) == 0:
         x_offset = 1.
-        y_offset = np.pi / 4.
+        y_offset = 0
 
     if x_offset == 0:
         angle_to_mid_radian = 0
@@ -280,6 +280,8 @@ def auto_guide(frame, show_plot_flag=False, color='orange'):
     
     if steering_angle > 0:
         corr_steering_angle = steering_angle - 90
+    if steering_angle ==0:
+        corr_steering_angle = 0
     
 
 
@@ -287,7 +289,7 @@ def auto_guide(frame, show_plot_flag=False, color='orange'):
 
     
 
-    if np.abs(corr_steering_angle)  < 10:
+    if np.abs(corr_steering_angle)  < 3:
         corr_steering_angle = 0
     else:
         pass
