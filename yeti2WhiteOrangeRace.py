@@ -117,7 +117,7 @@ class MoveYB(threading.Thread):
 		# if self.lastImage is None:
 		# 	self.lastImage = image.copy()
 		
-		steering_angle = spf.auto_guide(image)
+		steering_angle = spf.auto_guide(image,show_plot_flag=False)
 
 		return steering_angle
 
@@ -196,7 +196,7 @@ class StreamInit(threading.Thread):
 	def run(self):
 		global camera
 		global processor
-		camera.capture_sequence(self.TriggerStream(), format='rgb', use_video_port=True)
+		camera.capture_sequence(self.TriggerStream(), format='bgr', use_video_port=True)
 		print 'Terminating stream'
 		processor.terminated = True
 		processor.join()

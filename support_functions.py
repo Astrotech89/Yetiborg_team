@@ -1,8 +1,8 @@
 import cv2
 import numpy as np 
 import math
-import matplotlib.pyplot as plt 
-import matplotlib
+# import matplotlib.pyplot as plt 
+# import matplotlib
 
 
 def mask_color(frame, color, min_edge_threshold=100, max_edge_threshold=200):
@@ -185,7 +185,7 @@ def steering_angle_calculation(lane_lines, edges):
         angle_to_mid_radian = math.atan(y_offset / x_offset)  # angle (in radian) to center vertical line
 
     angle_to_mid_deg = int(angle_to_mid_radian * 180.0 / math.pi)  # angle (in degrees) to center vertical line
-    steering_angle = -angle_to_mid_deg   # this is the steering angle needed by picar front wheel
+    steering_angle = angle_to_mid_deg   # this is the steering angle needed by picar front wheel
 
 
    
@@ -260,32 +260,34 @@ def display_lines(frame, lines, steering_angle, line_color=(0, 255, 0), steering
     line_image = cv2.addWeighted(frame, 0, line_image, 1, 1)
     steering_angle_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
     final_image = cv2.addWeighted(line_image, 1, steering_angle_image, 1, 1)
-    plt.imshow(final_image)
+    # plt.imshow(final_image)
     return final_image
 
 
 
 
-def auto_guide(frame, show_plot_flag, color='orange'):
+def auto_guide(frame, show_plot_flag=False, color='orange'):
     
-
-    output, edges = mask_color(frame, color=color, min_edge_threshold=110, max_edge_threshold=330)
+    img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    output, edges = mask_color(img, color=color, min_edge_threshold=110, max_edge_threshold=330)
     cropped_edges = region_of_interest(edges)
     lane = detect_line_segments(cropped_edges, rho=10, angle=np.pi / 180, min_threshold=5, minLineLength=10, maxLineGap=5)
-    lane_lines = lane_lines_calculation(frame, lane)
+    lane_lines = lane_lines_calculation(img, lane)
     steering_angle = steering_angle_calculation(lane_lines, edges) 
 
     if steering_angle < 0:
-        corr_steering_angle = -90 - steering_angle
+        corr_steering_angle = steering_angle + 90
     
     if steering_angle > 0:
-        corr_steering_angle = 90 - steering_angle
+        corr_steering_angle = steering_angle - 90
+    
 
-    # print 'steering angle = ', corr_steering_angle
+
+    print ('steering angle = ', corr_steering_angle)
 
     
 
-    if np.abs(corr_steering_angle)  < 3:
+    if np.abs(corr_steering_angle)  < 10:
         corr_steering_angle = 0
     else:
         pass
