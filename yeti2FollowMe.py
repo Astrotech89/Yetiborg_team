@@ -191,6 +191,9 @@ class StreamProcessor(threading.Thread):
         ZB.SetMotor2(-driveRight * maxPower) # Front right
         ZB.SetMotor3(-driveLeft  * maxPower) # Front left
         ZB.SetMotor4(-driveLeft  * maxPower) # Rear left
+        print -driveRight * maxPower
+        print -driveLeft  * maxPower
+        # print ZB.SetMotor1(-driveRight * maxPower)
 
 # Image capture thread
 class ImageCapture(threading.Thread):
