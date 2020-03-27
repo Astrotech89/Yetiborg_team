@@ -31,7 +31,7 @@ def mask_color(frame, color, min_edge_threshold=100, max_edge_threshold=200):
         
 
     mask = cv2.inRange(frame, lower ,upper)
-    np.savetxt(mask)
+    np.savetxt("mask_text.txt", mask)
     output = cv2.bitwise_and(frame, frame, mask = mask)
 
     edges = cv2.Canny(output, min_edge_threshold, max_edge_threshold)
@@ -86,10 +86,10 @@ def detect_line_segments(cropped_edges, rho=1, angle=np.pi / 180, min_threshold=
 
     
 
-    # x = np.nanmean(np.array((line_segments[:,0,0]).tolist() + (line_segments[:,0,2]).tolist()))
-    x1 = line_segments[:,0,0]
-    x2 = line_segments[:,0,2]
-    x = np.mean((x1,x2))
+    x = np.nanmean(np.append(line_segments[:,0,0],line_segments[:,0,2]))
+    # x1 = line_segments[:,0,0]
+    # x2 = line_segments[:,0,2]
+    # x = np.mean((x1,x2))
     
     # y = np.nanmean(np.array((line_segments[:,0,1]).tolist() + (line_segments[:,0,3]).tolist()))
     y = np.mean(np.append(line_segments[:,0,1],line_segments[:,0,3]))
