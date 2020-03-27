@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: Latin-1
+
 # Load library functions we want
 import time
 import os
@@ -68,11 +71,11 @@ else:
 
 
 try: 
-    camera = PiCamera()
+    camera = picamera.PiCamera()
     camera.resolution = (imageHeight, imageWidth)
     camera.framerate = frameRate
 
-    capture = PiRGBArray(camera, size=(imageHeight, imageWidth))
+    capture = picamera.array.PiRGBArray(camera, size=(imageHeight, imageWidth))
     time.sleep(0.1)
 
 
