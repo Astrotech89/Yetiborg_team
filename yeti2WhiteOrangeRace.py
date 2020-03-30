@@ -90,6 +90,7 @@ class MoveYB(threading.Thread):
 		self.stream = picamera.array.PiRGBArray(camera)
 		self.event = threading.Event()
 		self.terminated = False
+		self.lastImage = None
 		self.start()
 
 	def run(self):
@@ -100,7 +101,7 @@ class MoveYB(threading.Thread):
 				try:
 					# Read the image and do some processing on it
 					self.stream.seek(0)
-					self.steering_angle = self.ProcessImage(self.stream.array)
+					self.steering_angle = self.Steering_Angle_Calculation(self.stream.array)
 					self.Turn_YB()
 
 				finally:
@@ -110,21 +111,36 @@ class MoveYB(threading.Thread):
 					self.event.clear()
 	
 	
-	def ProcessImage(self, image):
-		#Image processing code here
+	
+	def Steering_Angle_Calculation(self, image):
+		'''
+		args: image
+		returns: steering angle
+		This function takes an image and processes it to calculate the steering angle in which the borg shall move towards.
+		'''
+
+		# Flip image
 		if flippedImage:
 			image = cv2.flip(image, -1)
-		# if self.lastImage is None:
-		# 	self.lastImage = image.copy()
-
-		# a = spf.detect_line_segments(image)
-		# print np.shape(a)
+		# This will prevent the first image of being empty which would crash the "spf.auto_guide"
+		if self.lastImage is None:
+			self.lastImage = image.copy()
+			return
+		# Calculate the steering angle from the image
 		steering_angle = spf.auto_guide(image,show_plot_flag=False)
+		# Store the latest image to be lastImage 
+		self.lastImage = image.copy()
 
 		return steering_angle
 
-
+	
 	def Power_Change(self):
+		'''
+		args:
+		returns: the required power ratio 
+		This function takes a steering angle and calculates the power change required in the motors so
+		the borg steers to the required angle. 
+		'''
 		distance_between_opposite_wheels = 14.5 /100. #m
 		diameter_of_wheel = 6.5/100. #m
 		intergration_time = 350./1000. #sec, TBD
@@ -142,7 +158,7 @@ class MoveYB(threading.Thread):
 		power_ratio = self.Power_Change()
 		# print 'power = ', power_ratio
 		# print 'Max Power = ', maxPower
-		# steering_angle = self.ProcessImage
+		# steering_angle = self.Steering_Angle_Calculation
 
 
 		# Turn Right
