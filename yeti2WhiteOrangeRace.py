@@ -24,10 +24,7 @@ global camera
 global ZB
 global processor
 global running 
-# global steering_angle
-# global maxPower
 running = True
-# motion = False
 
 
 
@@ -66,7 +63,7 @@ voltageOut = 6.0                        # Maximum motor voltage
 
 # Camera settings
 imageWidth  = 320                       # Camera image width
-imageHeight = 240                       # Camera image height
+imageHeight = 256                       # Camera image height
 frameRate = 15                        # Camera image capture frame rate
 
 # Auto drive settings
@@ -141,6 +138,7 @@ class MoveYB(threading.Thread):
 		This function takes a steering angle and calculates the power change required in the motors so
 		the borg steers to the required angle. 
 		'''
+		
 		distance_between_opposite_wheels = 14.5 /100. #m
 		diameter_of_wheel = 6.5/100. #m
 		intergration_time = 350./1000. #sec, TBD
@@ -149,21 +147,21 @@ class MoveYB(threading.Thread):
 		return np.abs(power_ratio)
 
 	def Turn_YB(self):
-		# global motion
-		# global ZB
-		# global maxPower
-		# global steering_angle
-		# motion = True
-		# buffer = 30.
+		'''
+		args:
+		returns:
+		This function takes a steering angle and steers the borg
+		'''
+
+		global ZB
 		power_ratio = self.Power_Change()
 		# print 'power = ', power_ratio
 		# print 'Max Power = ', maxPower
-		# steering_angle = self.Steering_Angle_Calculation
+		# print 'steering andlge = ', self.steering_angle
 
 
 		# Turn Right
 		if self.steering_angle > 0:
-			# while steering_angle < 0:
 			print self.steering_angle
 			print 'turning left'
 			ZB.SetMotor1(-maxPower)
@@ -178,7 +176,6 @@ class MoveYB(threading.Thread):
 
 		# Turn Left
 		elif self.steering_angle < 0:
-			# while steering_angle > 0:\
 			print self.steering_angle
 			print 'turning right'
 			ZB.SetMotor1(-maxPower * power_ratio)
@@ -192,7 +189,6 @@ class MoveYB(threading.Thread):
 
 		
 		else:
-			# while steering_angle == 0:
 			print self.steering_angle
 			print 'going towards god'
 			ZB.SetMotor1(-maxPower)
