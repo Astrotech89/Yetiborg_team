@@ -68,6 +68,8 @@ def steering_angle_calculation(frame, color="white"):
             corr_steering_angle = -(steering_angle + 90)
         if steering_angle > 0:
             corr_steering_angle = 90 - steering_angle
+        elif steering_angle == 0:
+            corr_steering_angle = 0
 
     except:
         corr_steering_angle = 0
