@@ -280,6 +280,9 @@ def auto_guide(frame, show_plot_flag=False, color='orange'):
     
     if steering_angle > 0:
         corr_steering_angle = steering_angle - 90
+
+    else:
+        corr_steering_angle = steering_angle
     
 
 
