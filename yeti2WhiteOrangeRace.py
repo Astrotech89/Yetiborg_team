@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 
 #Custom imports
-import support_functions as spf 
+import support_functions_single_lane as spf 
 
 sys.stdout = sys.stderr
 print 'Libraries loaded'
