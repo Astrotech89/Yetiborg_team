@@ -100,7 +100,7 @@ class MoveYB(threading.Thread):
 				try:
 					# Read the image and do some processing on it
 					self.stream.seek(0)
-					self.steering_angle, self.power_change = self.ProcessImage(self.stream.array)
+					self.steering_angle, self.power_ratio = self.ProcessImage(self.stream.array)
 					self.Turn_YB()
 
 				finally:
