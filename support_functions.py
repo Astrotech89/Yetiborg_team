@@ -304,3 +304,21 @@ def auto_guide(frame, show_plot_flag=False, color='orange'):
 
     return corr_steering_angle
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

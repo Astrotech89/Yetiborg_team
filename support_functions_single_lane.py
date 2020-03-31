@@ -230,12 +230,9 @@ def load_image(path, convert=True):
 def auto_guide(frame, show_plot_flag=False):
     
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    output, edges = mask_color(img, color='white', min_edge_threshold=0, max_edge_threshold=100)
+    output, edges = mask_color(img, color='orange', min_edge_threshold=0, max_edge_threshold=100)
     np.savetxt('edges.txt',edges)
     np.savetxt('output.txt',output[:,:,0])
-    # np.savetxt('frame1')
-    # np.savetxt('output.txt',output)
-    # cropped_edges = region_of_interest(edges)
     lane, x, y = detect_line_segments(edges, rho=10, angle=np.pi / 180, min_threshold=5, minLineLength=10, maxLineGap=5)
 
     height, width, _ = frame.shape
@@ -251,6 +248,8 @@ def auto_guide(frame, show_plot_flag=False):
     if steering_angle < 0:
         corr_steering_angle = -(steering_angle + 90)
     if steering_angle > 0:
+        corr_steering_angle = steering_angle
+    elif steering_angle == 0:
         corr_steering_angle = steering_angle
 
 
