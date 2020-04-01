@@ -73,10 +73,10 @@ def steering_angle_calculation(frame, color="white"):
 
     except:
         corr_steering_angle = 0
+        relative_distance_from_center = 0
     
     
     
-
     return corr_steering_angle, relative_distance_from_center
 
 
