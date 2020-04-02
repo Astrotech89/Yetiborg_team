@@ -58,11 +58,13 @@ def steering_angle_calculation(frame, color="white"):
             distance_from_center = np.sqrt((x_middle_calc_line - x_middle_line)**2 + (y_middle_calc_line - y_middle_line)**2)
 
         relative_distance_from_center = distance_from_center / (width/2)
-        print("relative distance from center", relative_distance_from_center)
+        # print("relative distance from center", relative_distance_from_center)
             
 
-        
-        steering_angle = np.rad2deg(-np.arctan((y_min - y_max)/(x_min_median - x_max_median)))
+        if x_min_median != x_max_median:
+            steering_angle = np.rad2deg(-np.arctan((y_min - y_max)/(x_min_median - x_max_median)))
+        else:
+            steering_angle = 0
 
         if steering_angle < 0:
             corr_steering_angle = -(steering_angle + 90)
@@ -72,6 +74,7 @@ def steering_angle_calculation(frame, color="white"):
             corr_steering_angle = 0
 
     except:
+        print("no line detected")
         corr_steering_angle = 0
         relative_distance_from_center = 0
     
@@ -107,7 +110,7 @@ def auto_guide(frame, color="orange"):
 
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     steering_angle, relative_distance_from_center = steering_angle_calculation(img, color=color)
-    power_change = Power_Change(steering_angle, relative_distance_from_center)
+    # power_change = Power_Change(steering_angle, relative_distance_from_center)
 
-    return steering_angle, power_change
+    return steering_angle, relative_distance_from_center
 

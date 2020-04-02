@@ -100,7 +100,7 @@ class MoveYB(threading.Thread):
 				try:
 					# Read the image and do some processing on it
 					self.stream.seek(0)
-					self.steering_angle, self.power_ratio = self.ProcessImage(self.stream.array)
+					self.steering_angle, self.relative_distance_from_center = self.ProcessImage(self.stream.array)
 					self.Turn_YB()
 
 				finally:
@@ -117,9 +117,9 @@ class MoveYB(threading.Thread):
 		# if self.lastImage is None:
 		# 	self.lastImage = image.copy()
 		
-		steering_angle, power_change =  spf.auto_guide(image, color="white")
+		steering_angle, relative_distance_from_center =  spf.auto_guide(image, color="white")
 
-		return steering_angle, power_change
+		return -steering_angle, relative_distance_from_center
 
 
 	# def Power_Change(self):
@@ -130,6 +130,23 @@ class MoveYB(threading.Thread):
 	# 	power_ratio = 1. - w/300
 	# 	return np.abs(power_ratio)
 
+	def Power_Change(self):
+
+		distance_between_opposite_wheels = 14.5 /100. #m
+		diameter_of_wheel = 6.5/100. #m
+		intergration_time = 350./1000. #sec, TBD
+		w = np.abs(self.steering_angle) * distance_between_opposite_wheels / diameter_of_wheel / intergration_time
+		power_ratio_angle = np.abs(1. - w/300)
+		power_ratio_distance = np.abs(1 - np.abs(self.relative_distance_from_center))
+
+		total_power_ratio = np.sqrt(power_ratio_angle**2 + power_ratio_distance**2)/np.sqrt(2)
+		
+    	# total_power_ratio = (power_ratio_distance + power_ratio_angle)/2
+		return total_power_ratio
+
+
+    	
+
 	def Turn_YB(self):
 		# global motion
 		# global ZB
@@ -137,7 +154,7 @@ class MoveYB(threading.Thread):
 		# global steering_angle
 		# motion = True
 		# buffer = 30.
-		# #############power_ratio = self.Power_Change()
+		power_ratio = self.Power_Change()
 		# print 'power = ', power_ratio
 		# print 'Max Power = ', maxPower
 		# steering_angle = self.ProcessImage
@@ -150,8 +167,8 @@ class MoveYB(threading.Thread):
 			print 'turning left'
 			ZB.SetMotor1(-maxPower)
 			ZB.SetMotor2(-maxPower)
-			ZB.SetMotor3(self.power_ratio * -maxPower)
-			ZB.SetMotor4(self.power_ratio * -maxPower)
+			ZB.SetMotor3(power_ratio * -maxPower)
+			ZB.SetMotor4(power_ratio * -maxPower)
 			print ZB.GetMotor1()
 			print ZB.GetMotor2()
 			print ZB.GetMotor3()
@@ -163,8 +180,8 @@ class MoveYB(threading.Thread):
 			# while steering_angle > 0:\
 			print self.steering_angle
 			print 'turning right'
-			ZB.SetMotor1(-maxPower * self.power_ratio)
-			ZB.SetMotor2(-maxPower * self.power_ratio)
+			ZB.SetMotor1(-maxPower * power_ratio)
+			ZB.SetMotor2(-maxPower * power_ratio)
 			ZB.SetMotor3(-maxPower)
 			ZB.SetMotor4(-maxPower)
 			print ZB.GetMotor1()
