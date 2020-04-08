@@ -7,7 +7,7 @@ import numpy as np
 
 def mask_color(frame, color):
 
-    white = [[70, 10, 160], [255, 255, 255]]
+    white = [[70, 10, 155], [255, 255, 255]]
     orange = [[1, 10, 60], [15, 200, 220]]
 
     if color=='white':

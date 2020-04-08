@@ -108,7 +108,7 @@ try:
 
     try:
         # Trying sequence capture
-        for frame in camera.capture_sequence(capture, format="bgr", use_video_port=True):
+        for frame in camera.capture_sequence("image", format="bgr", use_video_port=True):
             new_image_sequence = frame.array
             # Save image frmo continuous capture with bhr format
             cv2.imwrite('./capture_from_sequence.jpeg', new_image_sequence)
@@ -118,6 +118,9 @@ try:
         print "Bollocks, sequence didn't work"
         pass
 
+"""
+"image"
+"""
 
 
 except KeyboardInterrupt:
