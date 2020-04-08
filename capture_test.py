@@ -111,21 +111,12 @@ try:
 
     try:
         # Trying sequence capture
-        print("1")
-        capture_2 = picamera.array.PiRGBArray(camera, size=(imageHeight, imageWidth))
-        print("2")
-        camera.capture_sequence(['image%02d.jpg' % i for i in range(2)])
-        # print (type(capture_2))
-        print('started')
-        # new_image_sequence = frame.array
-        print('captured frame')
-        # Save image frmo continuous capture with bhr format
-        # np.savetxt("sequence_capture.txt", capture_2)
-        # cv2.imwrite('./capture_from_sequence.jpeg', capture_2)
-        print('saved image')
-        # time.sleep(0.5)
-        # capture_2.truncate(0)
-        # break
+        for frame in camera.capture_sequence("image", format="bgr", use_video_port=True):
+            new_image_sequence = frame.array
+            # Save image frmo continuous capture with bhr format
+            cv2.imwrite('./capture_from_sequence.jpeg', new_image_sequence)
+            capture.truncate(0)
+            break
     except: 
         print "Bollocks, sequence didn't work"
         pass
@@ -134,6 +125,9 @@ try:
     #     message = template.format(type(ex).__name__, ex.args)
     #     print message
 
+"""
+"image"
+"""
 
 except KeyboardInterrupt:
 	print '\nUser shutdown'
