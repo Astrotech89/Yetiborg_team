@@ -13,10 +13,9 @@ def mask_color(frame, color, min_edge_threshold=100, max_edge_threshold=200):
     2) Returns the edges of the image
     '''
 
-    white = [[220,220,220],[255,255,255]]
-    # Trial for HSV coding (doesn't work right now)
-    orange = [[2, 80, 50], [15, 180, 255]]
-    # orange = [[210, 140, 100], [240, 200, 180]]
+    white = [[60, 0, 100], [255, 255, 255]]
+    orange = [[0, 0, 100], [10, 255, 255]]
+
 
     if color=='white':
 
@@ -225,7 +224,7 @@ def Power_Change(steering_angle):
 
 
 
-def display_lines(frame, lines, steering_angle, line_color=(0, 255, 0), steering_line_color=(255, 0, 0), line_width=80):
+def display_lines(frame, lines, steering_angle, line_color=(0, 255, 0), steering_line_color=(255, 0, 0), line_width=2):
     '''
     Returns the frame with the lane lines and a line which visulizes the steering angle
     The line which resembles the steering angle always starts at the center bottom of the frame
@@ -233,7 +232,7 @@ def display_lines(frame, lines, steering_angle, line_color=(0, 255, 0), steering
         ---------------Note--------------- 
             0-89 degree: turn left
             90 degree: going straight
-            91-180 degree: turn righ
+            91-180 degree: turn right
         ----------------------------------
     '''
 
