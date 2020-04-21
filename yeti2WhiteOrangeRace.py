@@ -67,7 +67,7 @@ voltageOut = 6.0                        # Maximum motor voltage
 # Camera settings
 imageWidth  = 320                       # Camera image width
 imageHeight = 240                       # Camera image height
-frameRate = 15                        # Camera image capture frame rate
+frameRate = 25                  # Camera image capture frame rate
 
 # Auto drive settings
 autoZoneCount = 80                      # Number of detection zones, higher is more accurate
@@ -118,7 +118,7 @@ class MoveYB(threading.Thread):
 		# if self.lastImage is None:
 		# 	self.lastImage = image.copy()
 		
-		steering_angle, relative_distance_from_center =  spf.auto_guide(image, color="white")
+		steering_angle, relative_distance_from_center =  spf.auto_guide(image, color="orange")
 
 		return -steering_angle, relative_distance_from_center
 
