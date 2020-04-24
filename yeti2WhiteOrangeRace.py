@@ -16,6 +16,7 @@ import numpy as np
 #Custom imports
 import new_single_line_support_functions as spf 
 
+
 sys.stdout = sys.stderr
 print 'Libraries loaded'
 
@@ -81,7 +82,18 @@ if voltageOut > voltageIn:
 	maxPower = 1.0
 else:
 	# maxPower = voltageOut / float(voltageIn)
-	maxPower = 0.4
+	maxPower = 0.35
+
+def atStart():
+	ZB.SetMotor1(-maxPower)
+	ZB.SetMotor2(-maxPower)
+	ZB.SetMotor3(maxPower) #* 0.5)
+	ZB.SetMotor4(maxPower) #* 0.5)
+	# time.sleep(dtime)
+	# ZB.SetMotor1(0)
+	# ZB.SetMotor2(0)
+	# ZB.SetMotor3(0)
+	# ZB.SetMotor4(0)
 
 
 class MoveYB(threading.Thread):
@@ -244,7 +256,13 @@ imageCenterY = imageHeight / 2.0
 
 print 'Setup stream processing thread'
 
-#insert raw_input()
+blah = True
+
+start = raw_input('Would you like to start?')
+if start == 'yes':
+	atStart(0.5)
+
+
 
 try:
 	processor = MoveYB()
