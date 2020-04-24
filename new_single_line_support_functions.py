@@ -7,7 +7,11 @@ import numpy as np
 
 def mask_color(frame, color):
 
+<<<<<<< HEAD
     white = [[70, 10, 155], [255, 255, 255]]
+=======
+    white = [[70, 10, 150], [255, 255, 255]]
+>>>>>>> code_fixing
     orange = [[1, 10, 60], [15, 200, 220]]
 
     if color=='white':
@@ -26,7 +30,7 @@ def mask_color(frame, color):
     return output
 
 
-def steering_angle_calculation(frame, color="white"):
+def steering_angle_calculation(frame, color):
     
     masked_image = mask_color(frame, color=color)
     sums = np.sum(masked_image, axis=2)
@@ -54,8 +58,9 @@ def steering_angle_calculation(frame, color="white"):
         
         if x_middle_calc_line - x_middle_line < 0:
             distance_from_center = -np.sqrt((x_middle_calc_line - x_middle_line)**2 + (y_middle_calc_line - y_middle_line)**2)
-        if x_middle_calc_line - x_middle_line > 0:
+        if x_middle_calc_line - x_middle_line >= 0:
             distance_from_center = np.sqrt((x_middle_calc_line - x_middle_line)**2 + (y_middle_calc_line - y_middle_line)**2)
+        
 
         relative_distance_from_center = distance_from_center / (width/2)
         # print("relative distance from center", relative_distance_from_center)
@@ -106,7 +111,7 @@ def Power_Change(steering_angle, relative_distance_from_center):
 
 
 
-def auto_guide(frame, color="orange"):
+def auto_guide(frame, color="white"):
 
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     steering_angle, relative_distance_from_center = steering_angle_calculation(img, color=color)

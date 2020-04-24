@@ -49,7 +49,7 @@ if not ZB.foundChip:
 	sys.exit()
 #ZB.SetEpoIgnore(True)                 # Uncomment to disable EPO latch, needed if you do not have a switch / jumper
 # Ensure the communications failsafe has been enabled!
-failsafe = False
+failsafe = True
 for i in range(5):
 	ZB.SetCommsFailsafe(True)
 	failsafe = ZB.GetCommsFailsafe()
@@ -67,20 +67,21 @@ voltageOut = 6.0                        # Maximum motor voltage
 # Camera settings
 imageWidth  = 320                       # Camera image width
 imageHeight = 240                       # Camera image height
-frameRate = 15                        # Camera image capture frame rate
+frameRate = 25                  # Camera image capture frame rate
 
 # Auto drive settings
 autoZoneCount = 80                      # Number of detection zones, higher is more accurate
 autoMinimumMovement = 20                # Minimum movement detection before driving
 steeringGain = 4.0                      # Use to increase or decrease the amount of steering used
-flippedImage = True                     # True if the camera needs to be rotated
+flippedImage = False                     # True if the camera needs to be rotated
 showDebug = True                        # True to display detection values
 
 # Setup the power limits
 if voltageOut > voltageIn:
 	maxPower = 1.0
 else:
-	maxPower = voltageOut / float(voltageIn)
+	# maxPower = voltageOut / float(voltageIn)
+	maxPower = 0.3
 
 
 class MoveYB(threading.Thread):
@@ -117,7 +118,7 @@ class MoveYB(threading.Thread):
 		# if self.lastImage is None:
 		# 	self.lastImage = image.copy()
 		
-		steering_angle, relative_distance_from_center =  spf.auto_guide(image, color="white")
+		steering_angle, relative_distance_from_center =  spf.auto_guide(image, color="orange")
 
 		return -steering_angle, relative_distance_from_center
 
@@ -134,14 +135,15 @@ class MoveYB(threading.Thread):
 
 		distance_between_opposite_wheels = 14.5 /100. #m
 		diameter_of_wheel = 6.5/100. #m
-		intergration_time = 350./1000. #sec, TBD
+		intergration_time = 15./1000. #sec, TBD
 		w = np.abs(self.steering_angle) * distance_between_opposite_wheels / diameter_of_wheel / intergration_time
 		power_ratio_angle = np.abs(1. - w/300)
-		power_ratio_distance = np.abs(1 - np.abs(self.relative_distance_from_center))
+		power_ratio_distance = np.abs(self.relative_distance_from_center)
 
-		total_power_ratio = np.sqrt(power_ratio_angle**2 + power_ratio_distance**2)/np.sqrt(2)
+		# total_power_ratio = np.sqrt(power_ratio_angle**2 + power_ratio_distance**2)/np.sqrt(2)
 		
-    	# total_power_ratio = (power_ratio_distance + power_ratio_angle)/2
+		total_power_ratio = power_ratio_distance
+
 		return total_power_ratio
 
 
@@ -161,47 +163,47 @@ class MoveYB(threading.Thread):
 
 
 		# Turn Right
-		if self.steering_angle > 0:
-			# while steering_angle < 0:
-			print self.steering_angle
+		if self.relative_distance_from_center > 0:
+			print self.relative_distance_from_center
 			print 'turning left'
 			ZB.SetMotor1(-maxPower)
 			ZB.SetMotor2(-maxPower)
 			ZB.SetMotor3(power_ratio * -maxPower)
 			ZB.SetMotor4(power_ratio * -maxPower)
-			print ZB.GetMotor1()
-			print ZB.GetMotor2()
-			print ZB.GetMotor3()
-			print ZB.GetMotor4()
+			# print ZB.GetMotor1()
+			# print ZB.GetMotor2()
+			# print ZB.GetMotor3()
+			# print ZB.GetMotor4()
+			return
 
 
 		# Turn Left
-		elif self.steering_angle < 0:
-			# while steering_angle > 0:\
-			print self.steering_angle
+		elif self.relative_distance_from_center:
+			print self.relative_distance_from_center
 			print 'turning right'
 			ZB.SetMotor1(-maxPower * power_ratio)
 			ZB.SetMotor2(-maxPower * power_ratio)
 			ZB.SetMotor3(-maxPower)
 			ZB.SetMotor4(-maxPower)
-			print ZB.GetMotor1()
-			print ZB.GetMotor2()
-			print ZB.GetMotor3()
-			print ZB.GetMotor4()
+			# print ZB.GetMotor1()
+			# print ZB.GetMotor2()
+			# print ZB.GetMotor3()
+			# print ZB.GetMotor4()
+			return
 
 		
 		else:
-			# while steering_angle == 0:
-			print self.steering_angle
+			print self.relative_distance_from_center
 			print 'going towards god'
 			ZB.SetMotor1(-maxPower)
 			ZB.SetMotor2(-maxPower)
 			ZB.SetMotor3(-maxPower)
 			ZB.SetMotor4(-maxPower)
-			print ZB.GetMotor1()
-			print ZB.GetMotor2()
-			print ZB.GetMotor3()
-			print ZB.GetMotor4()
+			# print ZB.GetMotor1()
+			# print ZB.GetMotor2()
+			# print ZB.GetMotor3()
+			# print ZB.GetMotor4()
+			return
 		
 
 
