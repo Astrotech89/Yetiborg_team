@@ -7,12 +7,8 @@ import numpy as np
 
 def mask_color(frame, color):
 
-<<<<<<< HEAD
-    white = [[70, 10, 155], [255, 255, 255]]
-=======
-    white = [[70, 10, 150], [255, 255, 255]]
->>>>>>> code_fixing
-    orange = [[1, 10, 60], [15, 200, 220]]
+    white = [[70, 0, 40], [255, 255, 255]]
+    orange = [[0, 0, 50], [15, 255, 255]]
 
     if color=='white':
 
@@ -27,24 +23,29 @@ def mask_color(frame, color):
     mask = cv2.inRange(frame, lower ,upper)
     output = cv2.bitwise_and(frame, frame, mask = mask)
 
-    return output
+    return output, mask
 
 
 def steering_angle_calculation(frame, color):
     
-    masked_image = mask_color(frame, color=color)
+    masked_image, _ = mask_color(frame, color=color)
     sums = np.sum(masked_image, axis=2)
     height, width = sums.shape
 
     try:
-        (y,x)=np.where(sums>200)
+        (y,x)=np.where(sums>100)
         # x_max = np.max(x[np.where(y==np.min(y))])
         # x_min = np.max(x[np.where(y==np.max(y))])
-        y_max = np.max(y)
+        y_max = np.max(y) - 30
         y_min = np.min(y)
 
-        x_min_median = np.median(x[np.where(y==np.min(y))])
-        x_max_median = np.median(x[np.where(y==np.max(y))])
+        try:
+            x_min_median = np.median(x[np.where(y==np.min(y))])
+            x_max_median = np.median(x[np.where(y==np.max(y)-30)])
+        except:
+            x_min_median = width/2
+            x_max_median = width/2
+        
 
 
 
@@ -65,27 +66,35 @@ def steering_angle_calculation(frame, color):
         relative_distance_from_center = distance_from_center / (width/2)
         # print("relative distance from center", relative_distance_from_center)
             
+        print x_min_median, x_max_median
 
         if x_min_median != x_max_median:
-            steering_angle = np.rad2deg(-np.arctan((y_min - y_max)/(x_min_median - x_max_median)))
-        else:
+            steering_angle = np.rad2deg(np.arctan((y_max - y_min)/(x_max_median - x_min_median)))
+        if x_min_median == x_max_median:
             steering_angle = 0
 
         if steering_angle < 0:
             corr_steering_angle = -(steering_angle + 90)
+            print 'negatives'
         if steering_angle > 0:
             corr_steering_angle = 90 - steering_angle
-        else:
+        if steering_angle == 0:
             corr_steering_angle = 0
+            print 'here'
 
     except:
         print("no line detected")
         corr_steering_angle = 0
         relative_distance_from_center = 0
+        x_min_median = width/2
+        x_max_median = width/2
+        y_min = 0
+        y_max = height
+        steering_angle = 0
     
     
     
-    return corr_steering_angle, relative_distance_from_center
+    return corr_steering_angle, relative_distance_from_center, x_min_median, y_min, x_max_median, y_max
 
 
 
@@ -114,7 +123,7 @@ def Power_Change(steering_angle, relative_distance_from_center):
 def auto_guide(frame, color="white"):
 
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    steering_angle, relative_distance_from_center = steering_angle_calculation(img, color=color)
+    steering_angle, relative_distance_from_center, _, _, _, _ = steering_angle_calculation(img, color=color)
     # power_change = Power_Change(steering_angle, relative_distance_from_center)
 
     return steering_angle, relative_distance_from_center
