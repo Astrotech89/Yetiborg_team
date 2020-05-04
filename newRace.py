@@ -59,7 +59,7 @@ for frame in camera.capture_continuous(rawCapture,format='bgr',use_video_port=Tr
 	image = frame.array
 	image2 = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 	mask_image, mask = spf.mask_color(image2,color='white')
-	steering_angle,_, x_min, y_min, x_max, y_max = spf.steering_angle_calculation(image2, color='white')
+	steering_angle,_, x_min, y_min, x_max, y_max, flag = spf.steering_angle_calculation(image2, color='white')
 	height, width, _ = image.shape
 
 	# kernel = np.ones((3,3), np.uint8)
@@ -75,11 +75,23 @@ for frame in camera.capture_continuous(rawCapture,format='bgr',use_video_port=Tr
 	# img[x_max, y_max] = [0,0,255]
 	# img[x_min, y_min] = [0,255,0]
 	# cv2.imshow("point", img)
-	red = [255,255,0]
-	cv2.circle(mask_image, (int(x_min),int(y_min)), 10, red, -1)
-	print(steering_angle)
-	cv2.circle(mask_image, (int(x_max),int(y_max)), 10, red, -1)
-	cv2.circle(mask_image, (int((x_min)+x_max)/2,int(height/2)), 10, [0,0,255], -1)
+	blue = [0,0,0]
+	red = [0,0,0]
+	green = [0,0,0]
+	if flag:
+		cv2.circle(mask_image, (int(y_min),int(x_min)), 10, red, -1)
+		print(steering_angle)
+		cv2.circle(mask_image, (int(y_max),int(x_max)), 10, blue, -1)
+		cv2.circle(mask_image, (int((y_min+y_max)/2), int((x_min+x_max)/2)), 10, green, -1)
+		
+
+	else:
+		cv2.circle(mask_image, (int(x_min),int(y_min)), 10, red, -1)
+		print(steering_angle)
+		cv2.circle(mask_image, (int(x_max),int(y_max)), 10, blue, -1)
+		cv2.circle(mask_image, (int((x_min+x_max)/2), int((y_min+y_max)/2)), 10, green, -1)
+
+
 	cv2.imshow("Original",mask_image)
 	rawCapture.truncate(0)
 	key = cv2.waitKey(1) & 0xFF

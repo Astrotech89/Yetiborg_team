@@ -7,12 +7,13 @@ import numpy as np
 
 def mask_color(frame, color):
     # Light Environment
-    white = [[70, 10, 150], [255, 255, 255]]
-    orange = [[1, 10, 60], [15, 200, 220]]
+    # white = [[70, 10, 150], [255, 255, 255]]
+    # orange = [[1, 10, 60], [15, 200, 220]]
+    # frame = cv2.medianBlur(frame,11)
     
     # Dark Environment
-    # white = [[70, 0, 40], [255, 255, 255]]
-    # orange = [[0, 0, 50], [15, 255, 255]]
+    white = [[20, 0, 0], [255, 255, 255]]
+    orange = [[0, 0, 50], [15, 255, 255]]
 
     if color=='white':
 
@@ -27,15 +28,18 @@ def mask_color(frame, color):
     mask = cv2.inRange(frame, lower ,upper)
     output = cv2.bitwise_and(frame, frame, mask = mask)
 
-    return output, mask
+    # if u want the above output change the return
+    new_masked_image = cv2.adaptiveThreshold(frame[:,:,2],255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,149,-12)
+
+    return new_masked_image, mask
 
 
 def steering_angle_calculation(frame, color, value_threshold=200):
     
     masked_image, _ = mask_color(frame, color=color)
-    sums = np.sum(masked_image, axis=2)
+    sums = masked_image
     height, width = sums.shape
-
+    flag_end_of_line_on_x = False
     try:
         (y,x)=np.where(sums > value_threshold)
         
@@ -43,36 +47,54 @@ def steering_angle_calculation(frame, color, value_threshold=200):
         # New condition for when the line has a slope > 45 deg
         # --------------------------------------------------
         length_of_top_row = len(x[np.where(y==np.min(y))])
-
+        
         if length_of_top_row < 20:
             (x,y)=np.where(sums > value_threshold)
             flag_end_of_line_on_x = True
-        # --------------------------------------------------
-        # --------------------------------------------------
 
-        x_min_median = np.median(x[np.where(y==np.min(y))])
-        x_max_median = np.median(x[np.where(y==np.max(y)-30)])
+            # x_max_median = np.median(x[np.where(y==np.min(y))])
+            # x_min_median = np.median(x[np.where(y==np.max(y)-30)])
+            # y_max = np.max(y) - 30
+            # y_min = np.min(y)
+            # y_middle_line = width/2
+            # x_middle_line = height/2
+            # x_middle_calc_line = (y_min + y_max)/2
+            # y_middle_calc_line = (x_min_median + x_max_median)/2
+
+
+            x_min_median = np.median(x[np.where(y==np.min(y))])
+            x_max_median = np.median(x[np.where(y==np.max(y))])
+
+            y_max = np.max(y) - 30
+            y_min = np.min(y)
+
         
+            y_middle_calc_line = (y_min + y_max)/2
+            x_middle_calc_line = (x_min_median + x_max_median)/2
 
-        y_max = np.max(y) - 30
-        y_min = np.min(y)
+        
+            y_middle_line = height/2
+            x_middle_line = width/2
 
 
-        y_middle_calc_line = (y_min + y_max)/2
-        x_middle_calc_line = (x_min_median + x_max_median)/2
 
-        # --------------------------------------------------
-        # New condition for when the line has a slope > 45 deg
-        # --------------------------------------------------
-        if flag_end_of_line_on_x:
-            y_middle_line = width/2
-            x_middle_line = height/2
         # --------------------------------------------------
         # --------------------------------------------------
         else:
+            x_min_median = np.median(x[np.where(y==np.min(y))])
+            x_max_median = np.median(x[np.where(y==np.max(y)-30)])
+
+            y_max = np.max(y) - 30
+            y_min = np.min(y)
+
+        
+            y_middle_calc_line = (y_min + y_max)/2
+            x_middle_calc_line = (x_min_median + x_max_median)/2
+
+        
             y_middle_line = height/2
             x_middle_line = width/2
-        
+            
         
 
 
@@ -113,9 +135,6 @@ def steering_angle_calculation(frame, color, value_threshold=200):
         print("no line detected")
         corr_steering_angle = 0
         relative_distance_from_center = 0
-        if flag_end_of_line_on_x:
-            y_min_median = width/2
-            y_max_median = width/2
         x_min_median = width/2
         x_max_median = width/2
         y_min = 0
@@ -124,7 +143,7 @@ def steering_angle_calculation(frame, color, value_threshold=200):
     
     
     
-    return corr_steering_angle, relative_distance_from_center, x_min_median, y_min, x_max_median, y_max
+    return corr_steering_angle, relative_distance_from_center, x_min_median, y_min, x_max_median, y_max, flag_end_of_line_on_x
 
 
 
@@ -153,7 +172,7 @@ def Power_Change(steering_angle, relative_distance_from_center):
 def auto_guide(frame, color="white"):
 
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    steering_angle, relative_distance_from_center, _, _, _, _ = steering_angle_calculation(img, color=color)
+    steering_angle, relative_distance_from_center, _, _, _, _, _ = steering_angle_calculation(img, color=color)
     # power_change = Power_Change(steering_angle, relative_distance_from_center)
 
     return steering_angle, relative_distance_from_center
