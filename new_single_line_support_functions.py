@@ -3,6 +3,7 @@
 
 import cv2
 import numpy as np 
+import time
 
 
 def mask_color(frame, color):
@@ -12,8 +13,13 @@ def mask_color(frame, color):
     # frame = cv2.medianBlur(frame,11)
     
     # Dark Environment
-    white = [[20, 0, 0], [255, 255, 255]]
+    # white = [[50, 0, 160], [180, 100, 255]]
+    # orange = [[0, 0, 50], [15, 255, 255]]
+
+    # HLS
+    white = [[0, 150, 0], [255, 255, 255]]
     orange = [[0, 0, 50], [15, 255, 255]]
+
 
     if color=='white':
 
@@ -28,20 +34,25 @@ def mask_color(frame, color):
     mask = cv2.inRange(frame, lower ,upper)
     output = cv2.bitwise_and(frame, frame, mask = mask)
 
-    # if u want the above output change the return
-    new_masked_image = cv2.adaptiveThreshold(frame[:,:,2],255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,149,-12)
+    # time_1 = time.time()
+    # # if u want the above output change the return
+    # output = cv2.adaptiveThreshold(frame[:,:,2],255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,149,-12)
+    # time_2 = time.time()
+    # print(time_2 - time_1)
 
-    return new_masked_image, mask
+    return output, mask
 
 
-def steering_angle_calculation(frame, color, value_threshold=200):
+def steering_angle_calculation(frame, color, value_threshold=80):
     
     masked_image, _ = mask_color(frame, color=color)
-    sums = masked_image
+    print np.max(masked_image)
+    sums = np.sum(masked_image, axis=2)
     height, width = sums.shape
     flag_end_of_line_on_x = False
     try:
         (y,x)=np.where(sums > value_threshold)
+        
         
         # --------------------------------------------------
         # New condition for when the line has a slope > 45 deg
@@ -101,7 +112,7 @@ def steering_angle_calculation(frame, color, value_threshold=200):
 
         if x_middle_calc_line - x_middle_line < 0:
             distance_from_center = -np.sqrt((x_middle_calc_line - x_middle_line)**2 + (y_middle_calc_line - y_middle_line)**2)
-        if x_middle_calc_line - x_middle_line >= 0:
+        else:
             distance_from_center = np.sqrt((x_middle_calc_line - x_middle_line)**2 + (y_middle_calc_line - y_middle_line)**2)
         
 
@@ -126,10 +137,15 @@ def steering_angle_calculation(frame, color, value_threshold=200):
         
         if steering_angle < 0:
             corr_steering_angle = -(steering_angle + 90)
-        if steering_angle > 0:
+        elif steering_angle > 0:
             corr_steering_angle = 90 - steering_angle
-        elif steering_angle == 0:
+        else:
             corr_steering_angle = 0
+        
+        if np.abs(corr_steering_angle) < 8:
+            corr_steering_angle = 0
+        else:
+            pass
 
     except:
         print("no line detected")
@@ -141,7 +157,7 @@ def steering_angle_calculation(frame, color, value_threshold=200):
         y_max = height
         steering_angle = 0
     
-    
+    # print(corr_steering_angle)
     
     return corr_steering_angle, relative_distance_from_center, x_min_median, y_min, x_max_median, y_max, flag_end_of_line_on_x
 
@@ -171,7 +187,7 @@ def Power_Change(steering_angle, relative_distance_from_center):
 
 def auto_guide(frame, color="white"):
 
-    img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    img = cv2.cvtColor(frame, cv2.COLOR_BGR2HLS)
     steering_angle, relative_distance_from_center, _, _, _, _, _ = steering_angle_calculation(img, color=color)
     # power_change = Power_Change(steering_angle, relative_distance_from_center)
 

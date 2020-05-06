@@ -126,7 +126,7 @@ class MoveYB(threading.Thread):
 		# if self.lastImage is None:
 		# 	self.lastImage = image.copy()
 		
-		steering_angle, relative_distance_from_center =  spf.auto_guide(image, color="orange")
+		steering_angle, relative_distance_from_center =  spf.auto_guide(image, color="white")
 
 		return -steering_angle, relative_distance_from_center
 
@@ -147,12 +147,15 @@ class MoveYB(threading.Thread):
 		# w = np.abs(self.steering_angle) * distance_between_opposite_wheels / diameter_of_wheel / intergration_time
 		# power_ratio_angle = np.abs(1. - w/300)
 
-		power_ratio_distance = np.abs(self.relative_distance_from_center)
-		power_ratio_angle = self.steering_angle/90.
 
-		total_power_ratio = 1.8*np.sqrt(power_ratio_angle**2 + power_ratio_distance**2)/np.sqrt(2)
+		power_ratio_angle = self.steering_angle/90.
+		# power_ratio_distance = np.abs(self.relative_distance_from_center)
+		# total_power_ratio = 0.9*np.sqrt(power_ratio_angle**2 + power_ratio_distance**2)/2
 		# total_power_ratio = power_ratio_distance
-		# total_power_ratio = 1.5*power_ratio_angle
+		if np.abs(self.steering_angle) < 20:
+			total_power_ratio = 0.8 * power_ratio_angle
+		else:
+			total_power_ratio = 1.1*power_ratio_angle
 
 		return total_power_ratio
 
@@ -175,7 +178,7 @@ class MoveYB(threading.Thread):
 
 
 		# Turn Right
-		if self.relative_distance_from_center > 0:
+		if self.steering_angle > 0:
 			print self.steering_angle
 			print 'turning left'
 			ZB.SetMotor1(-maxPower)
@@ -186,7 +189,7 @@ class MoveYB(threading.Thread):
 
 
 		# Turn Left
-		elif self.relative_distance_from_center:
+		elif self.steering_angle < 0:
 			print self.steering_angle
 			print 'turning right'
 			ZB.SetMotor1(-maxPower * power_ratio)
