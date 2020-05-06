@@ -81,18 +81,18 @@ for frame in camera.capture_continuous(rawCapture,format='bgr',use_video_port=Tr
 	blue = [0,0,0]
 	red = [0,0,0]
 	green = [0,0,0]
-	# if flag:
-	# 	cv2.circle(mask_image[:,:,0], (int(y_min),int(x_min)), 10, red, -1)
-	# 	print(steering_angle)
-	# 	cv2.circle(mask_image[:,:,0], (int(y_max),int(x_max)), 10, blue, -1)
-	# 	cv2.circle(mask_image[:,:,0], (int((y_min+y_max)/2), int((x_min+x_max)/2)), 10, green, -1)
+	if flag:
+		cv2.circle(mask_image, (int(y_min),int(x_min)), 10, red, -1)
+		# print(steering_angle)
+		cv2.circle(mask_image, (int(y_max),int(x_max)), 10, blue, -1)
+		cv2.circle(mask_image, (int((y_min+y_max)/2), int((x_min+x_max)/2)), 10, green, -1)
 		
 
-	# else:
-	# 	cv2.circle(mask_image[:,:,0], (int(x_min),int(y_min)), 10, red, -1)
-	# 	print(steering_angle)
-	# 	cv2.circle(mask_image[:,:,0], (int(x_max),int(y_max)), 10, blue, -1)
-	# 	cv2.circle(mask_image[:,:,0], (int((x_min+x_max)/2), int((y_min+y_max)/2)), 10, green, -1)
+	else:
+		cv2.circle(mask_image, (int(x_min),int(y_min)), 10, red, -1)
+		# print(steering_angle)
+		cv2.circle(mask_image, (int(x_max),int(y_max)), 10, blue, -1)
+		cv2.circle(mask_image, (int((x_min+x_max)/2), int((y_min+y_max)/2)), 10, green, -1)
 
 
 	cv2.imshow("Original",mask_image)

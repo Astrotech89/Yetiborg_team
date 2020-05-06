@@ -46,7 +46,7 @@ def mask_color(frame, color):
 def steering_angle_calculation(frame, color, value_threshold=80):
     
     masked_image, _ = mask_color(frame, color=color)
-    print np.max(masked_image)
+    # print np.max(masked_image)
     sums = np.sum(masked_image, axis=2)
     height, width = sums.shape
     flag_end_of_line_on_x = False
