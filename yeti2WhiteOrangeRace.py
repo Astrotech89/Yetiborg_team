@@ -82,7 +82,7 @@ if voltageOut > voltageIn:
 	maxPower = 1.0
 else:
 	# maxPower = voltageOut / float(voltageIn)
-	maxPower = 0.4
+	maxPower = 0.45
 
 	#Motors 1 & 2 are on the right
 
@@ -127,9 +127,9 @@ class MoveYB(threading.Thread):
 		# if self.lastImage is None:
 		# 	self.lastImage = image.copy()
 		
-		steering_angle, relative_distance_from_center, masked_image =  spf.auto_guide(image, color="white")
+		steering_angle, relative_distance_from_center =  spf.auto_guide(image, color="white")
 		# cv2.imshow('output',masked_image)
-		
+		# print(camera.framerate)	
 
 
 		return -steering_angle, relative_distance_from_center
@@ -153,13 +153,22 @@ class MoveYB(threading.Thread):
 
 
 		power_ratio_angle = self.steering_angle/90.
-		# power_ratio_distance = np.abs(self.relative_distance_from_center)
-		# total_power_ratio = 0.9*np.sqrt(power_ratio_angle**2 + power_ratio_distance**2)/2
-		# total_power_ratio = power_ratio_distance
-		if np.abs(self.steering_angle) < 20:
-			total_power_ratio = 0.8 * power_ratio_angle
+		if np.abs(self.relative_distance_from_center) > 1:
+			power_ratio_distance = 1
 		else:
-			total_power_ratio = 1.1*power_ratio_angle
+			power_ratio_distance = np.abs(self.relative_distance_from_center)
+			
+		total_power_ratio = np.sqrt(power_ratio_angle**2 + power_ratio_distance**2)/2
+		# total_power_ratio = power_ratio_distance
+		if np.abs(self.steering_angle) < 15:
+			total_power_ratio = 0.65 * total_power_ratio
+		elif  15 <= np.abs(self.steering_angle) < 35:
+			total_power_ratio = 1.5 * total_power_ratio
+		else:
+			total_power_ratio = 1.8 * total_power_ratio
+
+		print('total power ration = ', total_power_ratio)
+			
 
 		return total_power_ratio
 
@@ -203,6 +212,20 @@ class MoveYB(threading.Thread):
 			return
 
 		
+		elif self.steering_angle==0:
+			if self.relative_distance_from_center < 0.2:
+				print 'turning right relative distance'
+				ZB.SetMotor1(-maxPower * power_ratio)
+				ZB.SetMotor2(-maxPower * power_ratio)
+				ZB.SetMotor3(-maxPower)
+				ZB.SetMotor4(-maxPower)
+
+			elif self.relative_distance_from_center > 0.2:
+				print 'turning left relative distance'
+				ZB.SetMotor1(-maxPower)
+				ZB.SetMotor2(-maxPower)
+				ZB.SetMotor3(-maxPower * power_ratio)
+				ZB.SetMotor4(-maxPower * power_ratio)
 		else:
 			print self.steering_angle
 			print 'going towards god'
@@ -246,11 +269,12 @@ camera.resolution = (imageWidth,imageHeight)
 imageCenterX = imageWidth / 2.0
 imageCenterY = imageHeight / 2.0
 
+
 print 'Setup stream processing thread'
 
 start = raw_input('Perform start turn? ')
 if start == 'y':
-	moveStart(0.6)
+	moveStart(-0.40)
 
 
 

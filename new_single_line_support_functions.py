@@ -17,7 +17,7 @@ def mask_color(frame, color):
     # orange = [[0, 0, 50], [15, 255, 255]]
 
     # HLS
-    white = [[0, 150, 0], [255, 255, 255]]
+    white = [[0, 100, 0], [255, 255, 255]]
     orange = [[0, 0, 50], [15, 255, 255]]
 
 
@@ -31,8 +31,9 @@ def mask_color(frame, color):
         upper = np.array(orange[1])
         
 
-    mask = cv2.inRange(frame, lower ,upper)
-    output = cv2.bitwise_and(frame, frame, mask = mask)
+    # mask = cv2.inRange(frame, lower ,upper)
+    mask = cv2.inRange(frame[:,:,1],np.asarray([100]),np.asarray([255]))
+    output = cv2.bitwise_and(frame[:,:,1], frame[:,:,1], mask = mask)
 
     # time_1 = time.time()
     # # if u want the above output change the return
@@ -47,7 +48,8 @@ def steering_angle_calculation(frame, color, value_threshold=80):
     
     masked_image, _ = mask_color(frame, color=color)
     # print np.max(masked_image)
-    sums = np.sum(masked_image, axis=2)
+    # sums = np.sum(masked_image, axis=2)
+    sums = masked_image
     height, width = sums.shape
     flag_end_of_line_on_x = False
     try:
@@ -147,6 +149,26 @@ def steering_angle_calculation(frame, color, value_threshold=80):
         else:
             pass
 
+
+
+
+        line_length = np.sqrt((x_max_median - x_min_median)**2 + (y_max - y_min)**2)
+        
+        if line_length > height/2:
+            flag_line_successfully_detected = True
+        else:
+            flag_line_successfully_detected = False
+
+        if not flag_line_successfully_detected:
+            print("no line detected due to short line")
+            corr_steering_angle = 0
+            relative_distance_from_center = 0
+            x_min_median = width/2
+            x_max_median = width/2
+            y_min = 0
+            y_max = height
+            steering_angle = 0    
+
     except:
         print("no line detected")
         corr_steering_angle = 0
@@ -157,7 +179,7 @@ def steering_angle_calculation(frame, color, value_threshold=80):
         y_max = height
         steering_angle = 0
     
-    # print(corr_steering_angle)
+    print('rel dist from center: ', relative_distance_from_center)
     
     return corr_steering_angle, relative_distance_from_center, x_min_median, y_min, x_max_median, y_max, flag_end_of_line_on_x
 
@@ -166,21 +188,21 @@ def steering_angle_calculation(frame, color, value_threshold=80):
 
 
 
-def Power_Change(steering_angle, relative_distance_from_center):
+# def Power_Change(steering_angle, relative_distance_from_center):
 
-    distance_between_opposite_wheels = 14.5 /100. #m
-    diameter_of_wheel = 6.5/100. #m
-    intergration_time = 350./1000. #sec, TBD
-    w = np.abs(steering_angle) * distance_between_opposite_wheels / diameter_of_wheel / intergration_time
-    power_ratio_angle = np.abs(1. - w/300)
-    power_ratio_distance = np.abs(1 - np.abs(relative_distance_from_center))
+#     distance_between_opposite_wheels = 14.5 /100. #m
+#     diameter_of_wheel = 6.5/100. #m
+#     intergration_time = 350./1000. #sec, TBD
+#     w = np.abs(steering_angle) * distance_between_opposite_wheels / diameter_of_wheel / intergration_time
+#     power_ratio_angle = np.abs(1. - w/300)
+#     power_ratio_distance = np.abs(1 - np.abs(relative_distance_from_center))
 
-    total_power_ratio = np.sqrt(power_ratio_angle**2 + power_ratio_distance**2)/np.sqrt(2)
+#     total_power_ratio = np.sqrt(power_ratio_angle**2 + power_ratio_distance**2)/np.sqrt(2)
 
-    # total_power_ratio = (power_ratio_distance + power_ratio_angle)/2
+#     # total_power_ratio = (power_ratio_distance + power_ratio_angle)/2
 
 
-    return total_power_ratio
+#     return total_power_ratio
 
 
 
@@ -191,5 +213,5 @@ def auto_guide(frame, color="white"):
     steering_angle, relative_distance_from_center, _, _, _, _, _ = steering_angle_calculation(img, color=color)
     # power_change = Power_Change(steering_angle, relative_distance_from_center)
 
-    return steering_angle, relative_distance_from_center, sums
+    return steering_angle, relative_distance_from_center#, sums
 
