@@ -17,7 +17,7 @@ def mask_color(frame, color):
     # orange = [[0, 0, 50], [15, 255, 255]]
 
     # HLS
-    white = [[0, 100, 0], [255, 255, 255]]
+    white = [[0, 180, 0], [255, 255, 255]]
     orange = [[0, 0, 50], [15, 255, 255]]
 
 
@@ -32,7 +32,7 @@ def mask_color(frame, color):
         
 
     # mask = cv2.inRange(frame, lower ,upper)
-    mask = cv2.inRange(frame[:,:,1],np.asarray([100]),np.asarray([255]))
+    mask = cv2.inRange(frame[:,:,1],np.asarray([180]),np.asarray([255]))
     output = cv2.bitwise_and(frame[:,:,1], frame[:,:,1], mask = mask)
 
     # time_1 = time.time()

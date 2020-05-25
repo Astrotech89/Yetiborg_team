@@ -82,7 +82,7 @@ if voltageOut > voltageIn:
 	maxPower = 1.0
 else:
 	# maxPower = voltageOut / float(voltageIn)
-	maxPower = 0.45
+	maxPower = 0.55
 
 	#Motors 1 & 2 are on the right
 
